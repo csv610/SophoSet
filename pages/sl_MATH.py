@@ -1,18 +1,28 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 import re
 
 st.set_page_config(layout="wide")
 
+# Constants
+MODEL_ID = "lighteval/MATH"
+SUBSETS = [
+    "all",
+    "algebra",
+    "counting_and_probability",
+    "geometry",
+    "intermediate_algebra",
+    "number_theory",
+    "prealgebra",
+    "precalculus"
+]
+SPLITS = ["train", "test"]
+
 # Load the dataset
 @st.cache_data()
-def load_data(subset, split):
-    model_id = "lighteval/MATH"
+def load_data(subset: str, split: str):
     try:
-       ds = load_dataset(model_id, subset)
+       ds = load_dataset(MODEL_ID, subset)
        return ds[split]
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
@@ -26,19 +36,10 @@ def view_dataset():
     st.sidebar.title("Navigation")
 
     # Subset selection
-    subset = st.sidebar.selectbox("Select Subset", [
-        "all",
-        "algebra",
-        "counting_and_probability",
-        "geometry",
-        "intermediate_algebra",
-        "number_theory",
-        "prealgebra",
-        "precalculus"
-    ])
+    subset = st.sidebar.selectbox("Select subset", SUBSETS)
 
     # Split selection
-    split = st.sidebar.selectbox("Select Split", ["train", "test"])
+    split = st.sidebar.selectbox("Select split", SPLITS)
 
     # Load dataset
     dataset = load_data(subset, split)
@@ -59,7 +60,7 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         problem = row['problem']
@@ -69,7 +70,7 @@ def view_dataset():
         st.write("")
         st.write(f"Solution: {solution}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     view_dataset()

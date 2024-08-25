@@ -1,16 +1,17 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 st.set_page_config(layout="wide")
+
+# Constants
+MODEL_ID = "GBaker/MedQA-USMLE-4-options-hf"
+SPLITS = ["train", "validation", "test"]
 
 # Load the dataset
 @st.cache_data()
 def load_data(split):
     try:
-       ds = load_dataset("GBaker/MedQA-USMLE-4-options-hf")
+       ds = load_dataset(MODEL_ID)
        return ds[split]
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
@@ -24,7 +25,7 @@ def main():
     st.sidebar.title("Navigation")
 
     # Split selection
-    split = st.sidebar.selectbox("Select Split", ["train", "validation", "test"])
+    split = st.sidebar.selectbox("Select split", SPLITS)
 
     # Load dataset
     dataset = load_data(split)
@@ -46,17 +47,17 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         st.write(row['sent1'])
-        st.write(f"(A)  {row['ending0']}")
-        st.write(f"(B)  {row['ending1']}")
-        st.write(f"(C)  {row['ending2']}")
-        st.write(f"(D)  {row['ending3']}")
-        st.write(f"label: {row['label']}")
+        st.write(f"(A) {row['ending0']}")
+        st.write(f"(B) {row['ending1']}")
+        st.write(f"(C) {row['ending2']}")
+        st.write(f"(D) {row['ending3']}")
+        st.write(f"Answer: {row['label']}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()

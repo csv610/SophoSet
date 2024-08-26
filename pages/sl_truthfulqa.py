@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 st.set_page_config(layout="wide")
 
@@ -14,7 +11,8 @@ def load_data(subset, split):
 
 # Streamlit app
 def main():
-    st.title("TruthfulQA Dataset")
+    st.title("Dataset: TruthfulQA")
+    st.divider()
 
     # List of available subjects
     subsets = ['generation', 'multiple_choice']
@@ -78,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

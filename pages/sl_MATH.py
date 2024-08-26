@@ -6,6 +6,7 @@ st.set_page_config(layout="wide")
 
 # Constants
 MODEL_ID = "lighteval/MATH"
+
 SUBSETS = [
     "all",
     "algebra",
@@ -30,7 +31,8 @@ def load_data(subset: str, split: str):
 
 # Streamlit app
 def view_dataset():
-    st.title("MATH Dataset")
+    st.title("Dataset: MATH")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")

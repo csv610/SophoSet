@@ -81,7 +81,7 @@ def display_question(index: int, row: dict, llm: LLMChat, disease_mapping: dict)
 
 def view_dataset():
     """Main function to display the dataset viewer."""
-    st.title("Symptom Disease Dataset")
+    st.title("Dataset: Symptom Disease")
 
     # Load the disease name mapping from the JSON file
     disease_mapping = load_disease_mapping()

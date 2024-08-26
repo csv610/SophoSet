@@ -5,7 +5,8 @@ st.set_page_config(layout="wide")
 
 def explore_data():
     # Set the title of the app
-    st.title("MathVista Data")
+    st.title("Dataset: MathVista")
+    st.divider()
 
     st.sidebar.title("Navigation")
 
@@ -82,7 +83,7 @@ def explore_data():
         st.write(f"**Choices:** {row['choices']}")
 
         st.write(f"**Answer:** {row['answer']}")
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     explore_data()

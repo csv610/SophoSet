@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 import re
 
 st.set_page_config(layout="wide")
@@ -25,7 +22,8 @@ def rewrite_sentence(text):
 
 # Streamlit app
 def main():
-    st.title("Competitive Math Dataset")
+    st.title("Dataset: Competitive Math")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -53,16 +51,15 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
-        problem  = rewrite_sentence(row['problem'])
-        solution = row['solution']
+        problem = rewrite_sentence(row['problem'])
 
         st.write(problem)
-        st.write(f"Solution: {solution}")
+        st.write(f"Solution: {row['solution']}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()

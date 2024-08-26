@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 import string
 
 st.set_page_config(layout="wide")
@@ -13,14 +10,10 @@ def load_data(split):
     ds = load_dataset("TIGER-Lab/MMLU-Pro")
     return ds[split]
 
-# Function to load image from a URL
-def load_image_from_url(image_url):
-    response = requests.get(image_url)
-    return Image.open(BytesIO(response.content))
-
 # Streamlit app
 def main():
-    st.title("MMLU Pro Dataset")
+    st.title("Dataset: MMLU Pro")
+    st.divider()
 
     # List of available subjects
     split = st.sidebar.selectbox("Select Split", ["test", "validation"])
@@ -64,7 +57,7 @@ def main():
 
         st.write(f"Answer: {row['answer']}")
     
-        st.markdown("---")  # Divider between items
+        st.divider() # Divider between items
 
 if __name__ == "__main__":
     main()

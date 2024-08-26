@@ -1,25 +1,24 @@
 import streamlit as st
-import requests
 from datasets import load_dataset
-from PIL import Image
-from io import BytesIO
 
 st.set_page_config(layout="wide")
 
 # Load the dataset
 @st.cache_data()
 def load_data(subject, split):
-    ds = load_dataset("cais/mmlu", subject)
-    return ds[split]
-
-# Function to load image from a URL
-def load_image_from_url(image_url):
-    response = requests.get(image_url)
-    return Image.open(BytesIO(response.content))
+    try:
+        dataset = load_dataset("cais/mmlu", subject)
+        if split not in dataset:
+            raise ValueError(f"Invalid split '{split}'. Available splits are: {', '.join(dataset.keys())}")
+        return dataset[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("MMLU Dataset")
+    st.title("Dataset: MMLU")
+    st.divider()
 
     # Dictionary of categories and their corresponding subjects
     categories = {
@@ -65,6 +64,8 @@ def main():
 
     # Load dataset
     dataset = load_data(subject, split)
+    if dataset is None:
+        st.stop()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -107,4 +108,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

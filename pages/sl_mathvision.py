@@ -8,12 +8,17 @@ st.set_page_config(layout="wide")
 @st.cache_data()
 def load_data(split):
     model_name = "MathLLMs/MathVision"
-    ds = load_dataset(model_name)
-    return ds[split]
+    try:
+        ds = load_dataset(model_name)
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("MathVision Dataset")
+    st.title("Dataset: MathVision")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -23,6 +28,10 @@ def main():
 
     # Load dataset
     dataset = load_data(split)
+    
+    if dataset is None:
+        st.warning("Unable to load dataset. Please try again later.")
+        return
 
     # Select number of questions per page
     num_questions_per_page = st.sidebar.slider("Select Number of Questions per Page", min_value=1, max_value=10, value=5)
@@ -41,7 +50,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question {start_index + i + 1}")
+        st.header(f"Question {i + 1}")
 
         st.write(f"**Question**: {row['question']}")
 
@@ -54,8 +63,7 @@ def main():
         if row['answer']:
             st.write(f"**Answer**: {row['answer']}")
 
-        st.markdown("---")  # Divider between questions
+        st.divider()
 
 if __name__ == "__main__":
     main()
-

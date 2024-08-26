@@ -1,26 +1,20 @@
 from datasets import load_dataset
-from PIL import Image
-import base64
-from io import BytesIO
+import streamlit as st
 
 hf_token = "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"
 
-# Convert image to base64 string
-def image_to_base64(image):
-    buffered = BytesIO()
-    image.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return img_str
+@st.cache_resource
+def load_data():
+    ds = load_dataset("UCSC-VLAA/MedTrinity-25M", "25M_full", use_auth_token=hf_token)
+    ds = ds['train']
+    return ds
 
 def main():
-    st.title("Med Trinity25M  Dataset")
+    st.title("Dataset: Med Trinity25M")
+    st.divider()
 
-    # Sidebar for navigation
-    st.sidebar.title("Navigation")
-
-    # Load the dataset with permission using the Hugging Face token
-    dataset = load_dataset("UCSC-VLAA/MedTrinity-25M", "25M_full", use_auth_token=hf_token)
-    dataset = dataset['split']
+    # Load the dataset using the cached function
+    dataset = load_data()
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -39,16 +33,16 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
-        image = row['image'])
-        caption = row['caption'])
+        image = row['image']
+        caption = row['caption']
         st.image(image, caption=f"Qs:{i}")
 
         st.write(f"Caption: {caption}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()

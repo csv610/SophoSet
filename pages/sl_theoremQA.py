@@ -1,6 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-import re
 
 st.set_page_config(layout="wide")
 
@@ -33,7 +32,7 @@ def config_panel():
 
 # Streamlit app
 def view_dataset():
-    st.title("TheoremQA  Dataset")
+    st.title("Dataset: TheoremQA")
 
     # Get sidebar selections
     dataset, num_items_per_page, selected_page = config_panel()
@@ -44,7 +43,7 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question = row['Question']
@@ -58,7 +57,7 @@ def view_dataset():
         answer = row['Answer']
         st.write(f"Answer: {answer}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()  # Divider between items
 
 if __name__ == "__main__":
     view_dataset()

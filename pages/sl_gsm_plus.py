@@ -1,31 +1,39 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 st.set_page_config(layout="wide")
 
-# Load the dataset
+# Define SPLITS constant
+SPLITS = ["test", "testmini"]
+
+# Load the datasetsl
 @st.cache_data()
 def load_data(split):
     model_name = "qintongli/GSM-Plus"
-    ds = load_dataset(model_name)
-    return ds[split]
+    try:
+        ds = load_dataset(model_name)
+        if split not in ds:
+            raise ValueError(f"Split '{split}' not found in the dataset.")
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("GSM Plus Dataset")
+    st.title("Dataset: GSM Plus")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
 
     # Split selection
-    split = st.sidebar.selectbox("Select Split", ["test", "testmini"])
-
+    split = st.sidebar.selectbox("Select Split", SPLITS)
 
     # Load dataset
     dataset = load_data(split)
+    if dataset is None:
+        st.stop()  # Stop execution if dataset loading failed
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -50,13 +58,17 @@ def main():
         st.header(f"Question: {start_index + i + 1}")
 
         question = row['question']
-        answer   = row['answer']
+        answer = row['answer']
 
         st.write(question)
         st.write("")
-        st.write(f"Answer: {answer}")
+        
+        # Create a unique key for each button
+        button_key = f"show_answer_{i}"
+        if st.button("Show Answer", key=button_key):
+            st.write(f"Answer: {answer}")
+        
         st.divider()
 
 if __name__ == "__main__":
     main()
-

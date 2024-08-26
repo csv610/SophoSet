@@ -7,9 +7,13 @@ st.set_page_config(layout="wide")
 # Load the dataset
 @st.cache_data()
 def load_data(subset, split):
-    model_name = "openai/gsm8k"
-    ds = load_dataset(model_name, subset)
-    return ds[split]
+    try:
+        model_name = "openai/gsm8k"
+        ds = load_dataset(model_name, subset)
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 def rewrite_sentence(text):
     # First, identify and escape LaTeX dollar signs
@@ -59,10 +63,15 @@ def config_panel():
 
 # Streamlit app
 def view_dataset():
-    st.title("GSM8K Dataset")
+    st.title("Dataset: GSM8K")
+    st.divider()
 
     # Get sidebar selections
     dataset, num_items_per_page, selected_page = config_panel()
+    
+    if dataset is None:
+        st.warning("Unable to load dataset. Please check your internet connection and try again.")
+        return
 
     # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
@@ -70,24 +79,27 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
-        # Display question and answer
+        # Display question
         question = rewrite_sentence(row['question'])
-        raw_answer = rewrite_sentence(row['answer'])
-
-        # Split the answer into solution and the final answer
-        answer, solution = split_solution_answer(raw_answer)
-
-        # Use the helper function to display text with custom font size and add spacing
         st.write(question)
         st.write("")  # Add vertical space
-        st.write(f"Answer: {answer}")
-        st.write("")  # Add vertical space
-        st.write(f"Solution: {solution}")
 
-        st.markdown("---")  # Divider between items
+        # Split the answer into solution and the final answer
+        raw_answer = rewrite_sentence(row['answer'])
+        answer, solution = split_solution_answer(raw_answer)
+
+        # Add buttons for showing answer and solution
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(f"Show Answer {i}"):
+                st.write(f"Answer: {answer}")
+        with col2:
+            if st.button(f"Show Solution {i}"):
+                st.write(f"Solution: {solution}")
+
+        st.divider()  # Divider between items
 
 if __name__ == "__main__":
     view_dataset()
-

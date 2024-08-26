@@ -1,21 +1,22 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
-import re
 
 st.set_page_config(layout="wide")
 
 # Load the dataset
 @st.cache_data()
 def load_data(split):
-    ds = load_dataset("medalpaca/medical_meadow_wikidoc_patient_information")
-    return ds[split]
+    try:
+        ds = load_dataset("medalpaca/medical_meadow_wikidoc_patient_information")
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("Medical Meadow Wikidoc Patient Info Dataset")
+    st.title("Dataset: Medical Meadow Wikidoc Patient Info")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -25,6 +26,10 @@ def main():
 
     # Load dataset
     dataset = load_data(split)
+
+    if dataset is None:
+        st.warning("Unable to load the dataset. Please try again later.")
+        return
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -43,7 +48,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question = row['input']
@@ -52,8 +57,7 @@ def main():
         st.write(question)
         st.write(f"Answer: {answer}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()
-

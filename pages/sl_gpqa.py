@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 import re
 
 hf_token = "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"
@@ -12,9 +9,13 @@ st.set_page_config(layout="wide")
 # Load the dataset
 @st.cache_data()
 def load_data(subset, split):
-    model_name = "Idavidrein/gpqa"
-    ds = load_dataset(model_name, subset,  use_auth_token=hf_token)
-    return ds[split]
+    try:
+        model_name = "Idavidrein/gpqa"
+        ds = load_dataset(model_name, subset, use_auth_token=hf_token)
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 def rewrite_sentence(text):
     # First, identify and escape LaTeX dollar signs
@@ -27,7 +28,8 @@ def rewrite_sentence(text):
 
 # Streamlit app
 def main():
-    st.title("GPQA  Dataset")
+    st.title("Dataset: GPQA")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -58,7 +60,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question = row['Pre-Revision Question']
@@ -67,7 +69,7 @@ def main():
         st.write(question)
         st.write(f"Answer: {answer}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()

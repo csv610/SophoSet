@@ -1,7 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import os
 
 # Load the dataset
 @st.cache_data()
@@ -12,7 +10,8 @@ def load_data(split = 'train'):
 
 # Streamlit app
 def main():
-    st.title("ScienceQA Dataset")
+    st.title("Dataset: ScienceQA")
+    st.divider()
 
     # Load dataset
     dataset = load_data()
@@ -38,7 +37,7 @@ def main():
     for i in range(start_index, end_index):
         row = dataset[i]
 
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         st.write(row['question'])
         st.write(row['choices'])
@@ -53,4 +52,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

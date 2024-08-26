@@ -19,7 +19,7 @@ def load_image(image_url):
 
 # Streamlit app
 def main():
-    st.title("OlympicArena Dataset")
+    st.title("Dataset: OlympicArena")
     st.divider()
 
     # Sidebar for subject selection
@@ -52,7 +52,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display instruction
         st.write(row['problem'])

@@ -1,6 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-import re
 
 st.set_page_config(layout="wide")
 
@@ -76,4 +75,3 @@ def view_dataset():
 
 if __name__ == "__main__":
     view_dataset()
-

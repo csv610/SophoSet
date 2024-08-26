@@ -11,12 +11,17 @@ st.set_page_config(layout="wide")
 @st.cache_data()
 def load_data(split):
     model_name = "medalpaca/medical_meadow_medical_flashcards"
-    ds = load_dataset(model_name)
-    return ds[split]
+    try:
+        ds = load_dataset(model_name)
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("Medical Meadow Flashcards Dataset")
+    st.title("Dataset: Medical Meadow Flashcards")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -26,6 +31,10 @@ def main():
 
     # Load dataset
     dataset = load_data(split)
+
+    if dataset is None:
+        st.warning("Unable to load dataset. Please try again later.")
+        return
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -44,7 +53,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question = row['input']
@@ -56,4 +65,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

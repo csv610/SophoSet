@@ -4,6 +4,17 @@ import string
 
 st.set_page_config(layout="wide")
 
+# Define subsets
+SUBSETS = [
+    'Art_Style', 'Functional_Correspondence', 'Multi-view_Reasoning', 'Relative_Reflectance',
+    'Visual_Correspondence', 'Counting', 'IQ_Test', 'Object_Localization',
+    'Semantic_Correspondence', 'Visual_Similarity', 'Forensic_Detection', 'Jigsaw',
+    'Relative_Depth', 'Spatial_Relation'
+]
+
+# Define splits
+SPLITS = ["val", "test"]
+
 # Load the dataset
 @st.cache_data()
 def load_data(subset, split):
@@ -18,17 +29,17 @@ def load_data(subset, split):
 
 # Streamlit app
 def main():
-    st.title("BLINK Dataset")
+    st.title("Dataset: BLINK")
     st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
 
     # Subset selection
-    subset = st.sidebar.selectbox("Select Subset", ['Art_Style', 'Functional_Correspondence', 'Multi-view_Reasoning', 'Relative_Reflectance', 'Visual_Correspondence', 'Counting', 'IQ_Test', 'Object_Localization', 'Semantic_Correspondence', 'Visual_Similarity', 'Forensic_Detection', 'Jigsaw', 'Relative_Depth', 'Spatial_Relation'])
+    subset = st.sidebar.selectbox("Select Subset", SUBSETS)
 
     # Split selection
-    split = st.sidebar.selectbox("Select Split", ["val", "test"])
+    split = st.sidebar.selectbox("Select Split", SPLITS)
 
     # Load dataset
     dataset = load_data(subset, split)

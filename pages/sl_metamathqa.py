@@ -1,27 +1,27 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 # Load the dataset
 @st.cache_data()
-def load_data():
-    ds = load_dataset("meta-math/MetaMathQA")
-    return ds
-
-# Function to load image from a URL
-def load_image_from_url(image_url):
-    response = requests.get(image_url)
-    return Image.open(BytesIO(response.content))
+def load_data(split='train'):
+    try:
+        ds = load_dataset("meta-math/MetaMathQA")
+        if split not in ds:
+            raise ValueError(f"Invalid split: {split}. Available splits are: {', '.join(ds.keys())}")
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
-    st.title("MetaMathQA Dataset")
+    st.title("Dataset: MetaMathQA")
+    st.divider()
 
     # Load dataset
     dataset = load_data()
-    dataset = dataset['train']  # You can also choose 'test', 'validation', etc.
+    if dataset is None:
+        st.stop()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -43,12 +43,11 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question {start_index + i + 1}")
+        st.header(f"Question {i + 1}")
         st.write(row['query'])
         st.write(f"Answer: {row['response']}")
 
-        st.markdown("---")  # Divider between items
+        st.divider()  # Divider between items
 
 if __name__ == "__main__":
     main()
-

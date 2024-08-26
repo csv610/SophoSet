@@ -11,15 +11,23 @@ def load_data(subset, split):
     Load the specified subset and split of the AI2 ARC dataset.
 
     Args:
-        subset (str): The subset of the dataset to load ('ARC-Challenge' or 'ARC-Easy').
+        subset (str): The subset of the dataset to load.
         split (str): The split of the dataset to load ('train', 'validation', or 'test').
 
     Returns:
         Dataset: The specified subset and split of the dataset.
-    """
-    ds = load_dataset("MMMU/MMMU", subset)
 
-    return ds[split]
+    Raises:
+        ValueError: If the dataset loading fails.
+    """
+    try:
+        ds = load_dataset("MMMU/MMMU", subset)
+        if split not in ds:
+            raise ValueError(f"Invalid split '{split}' for subset '{subset}'")
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        raise ValueError(f"Failed to load dataset for subset '{subset}' and split '{split}'")
 
 def config_panel():
     """
@@ -86,10 +94,9 @@ def process_latex(text):
     return text
 
 
-
 # Streamlit app
 def view_dataset():
-    st.title("MMMU Dataset")
+    st.title("Dataset: MMMU")
     st.divider()
 
     # Get sidebar selections
@@ -101,7 +108,7 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question  = row['question']
@@ -127,4 +134,3 @@ def view_dataset():
 
 if __name__ == "__main__":
     view_dataset()
-

@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 # Load the dataset
 @st.cache_data()
@@ -12,7 +9,8 @@ def load_data(split):
 
 # Streamlit app
 def main():
-    st.title("Winogrande Dataset")
+    st.title("Dataset: Winogrande")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -38,7 +36,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         st.write(row['request'])
@@ -48,4 +46,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

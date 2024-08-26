@@ -8,10 +8,15 @@ st.set_page_config(layout="wide")
 # Load the dataset
 @st.cache_data()
 def load_data(split):
-    model_name  = "Zhiqiang007/MathV360K"
-    ds = load_dataset(model_name)
-    ds = ds[split]
-    return ds
+    model_name = "Zhiqiang007/MathV360K"
+    try:
+        dataset = load_dataset(model_name)
+        if split not in dataset:
+            raise ValueError(f"Split '{split}' not found in the dataset.")
+        return dataset[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Function to load image from a file
 def load_image_from_file(image_filename, image_folder="mathv360k_images"):
@@ -36,11 +41,15 @@ def display_conversation(conversation_list):
 
 # Streamlit app
 def main():
-    st.title("MathV360K Dataset")
+    st.title("Dataset: MathV360K")
+    st.divider()
 
     # Load dataset
     split   = 'train'
     dataset = load_data(split)
+
+    if dataset is None:
+        st.stop()  # Stop execution if dataset loading failed
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -63,7 +72,7 @@ def main():
     for i in range(start_index, end_index):
         row = dataset[i]
 
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display image (from file)
         image = load_image_from_file(row['image'])
@@ -75,8 +84,7 @@ def main():
         else:
             st.write("Conversation data not found.")
 
-        st.markdown("---")  # Divider between items
+        st.divider()
 
 if __name__ == "__main__":
     main()
-

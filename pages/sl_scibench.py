@@ -1,8 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
 
 st.set_page_config(layout="wide")
 
@@ -15,7 +12,7 @@ def load_data(split = 'train'):
 
 # Streamlit app
 def main():
-    st.title("Sci-Bench Dataset")
+    st.title("Dataset: Sci-Bench")
     st.divider()
 
     # Load dataset
@@ -29,7 +26,7 @@ def main():
     
     # Calculate total pages
     total_items = len(dataset)
-    total_pages = (total_items // num_items_per_page) + 1
+    total_pages = (total_items - 1) // num_items_per_page + 1  # Simplified calculation
 
     # Page selection box
     page_options = list(range(1, total_pages + 1))
@@ -41,12 +38,10 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question {start_index + i + 1}")
+        st.header(f"Question {i + 1}")
         st.write(row['problem_text'])
         st.write(f"Answer: {row['answer_number']}")
-
         st.divider()
 
 if __name__ == "__main__":
     main()
-

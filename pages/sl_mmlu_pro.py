@@ -2,13 +2,20 @@ import streamlit as st
 from datasets import load_dataset
 import string
 
+
 st.set_page_config(layout="wide")
 
 # Load the dataset
 @st.cache_data()
 def load_data(split):
-    ds = load_dataset("TIGER-Lab/MMLU-Pro")
-    return ds[split]
+    try:
+        ds = load_dataset("TIGER-Lab/MMLU-Pro")
+        if split not in ds:
+            raise ValueError(f"Invalid split: {split}. Available splits are: {', '.join(ds.keys())}")
+        return ds[split]
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None
 
 # Streamlit app
 def main():
@@ -20,6 +27,9 @@ def main():
     
     # Load dataset
     dataset = load_data(split)
+    
+    if dataset is None:
+        st.stop()
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -61,4 +71,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

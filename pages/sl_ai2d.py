@@ -1,6 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-import re
 
 st.set_page_config(layout="wide")
 
@@ -60,7 +59,7 @@ def view_dataset():
     """
     Display the AI2 ARC dataset in a paginated format with questions and choices labeled as (A), (B), etc.
     """
-    st.title("AI2D Dataset")
+    st.title("Dataset: AI2D")
     st.divider()
 
     # Get sidebar selections
@@ -93,4 +92,3 @@ def view_dataset():
 
 if __name__ == "__main__":
     view_dataset()
-

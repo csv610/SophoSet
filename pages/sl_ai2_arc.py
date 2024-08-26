@@ -81,6 +81,7 @@ def view_dataset():
     Display the AI2 ARC dataset in a paginated format with questions and choices labeled as (A), (B), etc.
     """
     st.title("AI2 ARC Dataset")
+    st.divider()  
 
     # Get sidebar selections
     dataset, num_items_per_page, selected_page = config_panel()
@@ -89,9 +90,10 @@ def view_dataset():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, len(dataset))
 
+    choice_labels = ["A", "B", "C", "D", "E"]
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question  = row['question']
@@ -99,7 +101,6 @@ def view_dataset():
         choices   = row['choices']['text']
 
         # Format the choices as (A), (B), etc.
-        choice_labels = ["A", "B", "C", "D", "E"]
         formatted_choices = [f"({choice_labels[j]}) {choices[j]}" for j in range(len(choices))]
 
         # Use the helper function to display text with custom font size and add spacing
@@ -113,7 +114,7 @@ def view_dataset():
         st.write(f"Answer: {answer}")
         st.write("")  # Add vertical space
 
-        st.markdown("---")  # Divider between items
+        st.divider()  
 
 if __name__ == "__main__":
     view_dataset()

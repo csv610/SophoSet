@@ -1,8 +1,5 @@
 import streamlit as st
-from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
+from datasets import load_datasets
 
 st.set_page_config(layout="wide")
 
@@ -13,21 +10,15 @@ def load_data(split):
     ds = ds[split]
     return ds
 
-# Function to load image from a URL
-def load_image(image_url):
-    response = requests.get(image_url)
-    return Image.open(BytesIO(response.content))
-
 # Streamlit app
 def main():
-    st.title("OlympicArena Dataset")
+    st.title("Dataset: OlympicArena")
     st.divider()
 
     # Sidebar for subject selection
     st.sidebar.title("Navigation")
     # Split selection
     split = st.sidebar.selectbox("Select Split", ["test_en", "test_cn"])
-
 
     # Load dataset
     dataset = load_data(split)
@@ -49,7 +40,7 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display instruction
         st.write(row['question'])
@@ -58,7 +49,7 @@ def main():
         if row['images']:
             for image in row['images']:
                 try:
-                    st.image(image, caption=f"Item {start_index + i + 1}", width=500)
+                    st.image(image, caption=f"Item {i + 1}", width=500)
                 except Exception as e:
                     st.write(f"Unable to load image from {url}: {e}")
 

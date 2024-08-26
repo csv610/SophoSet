@@ -15,7 +15,8 @@ def load_image_from_path(image_path):
 
 # Streamlit app
 def main():
-    st.title("SLAKE Dataset")
+    st.title("Dataset: SLAKE")
+    st.divider()
 
     # Load dataset
     dataset = load_data()
@@ -44,21 +45,20 @@ def main():
     img_dir = os.path.abspath("slakeimages")
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display instruction
         st.write(row['question'])
   
         # Display image
-        if row['img_name'] is not None:
+        if row['img_name']:
             image_path = os.path.join(img_dir, row['img_name'])
             if os.path.exists(image_path):
                 image = load_image_from_path(image_path)
                 st.image(image, caption=f"Qs: {start_index + i + 1}", use_column_width=True)
             else:
                 st.write("Image file not found.")
-        else:
-            st.write("No image available.")
+        
 
         st.write(f"Answer: {row['answer']}")
 

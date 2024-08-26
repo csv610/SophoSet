@@ -80,7 +80,7 @@ SPLITS = ["train", "validation", "test"]
 
 # Streamlit app
 def main():
-    st.title("Big Bench Hard (BBH) Dataset")
+    st.title("Dataset: Big Bench Hard (BBH)")
 
     # Dropdown to select the subset
     subset = st.sidebar.selectbox("Select Subset", SUBSETS)

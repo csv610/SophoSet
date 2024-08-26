@@ -1,6 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
 
 st.set_page_config(layout="wide")
 

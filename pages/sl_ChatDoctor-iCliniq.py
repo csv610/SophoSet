@@ -1,9 +1,5 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
-import re
 from llm_chat import LLMChat
 
 st.set_page_config(layout="wide")
@@ -24,13 +20,17 @@ def load_llm_model(model_name: str = "llama3.1"):
 
 # Streamlit app
 def main():
-    st.title("ChatDoctor iCliniq Dataset")
+    st.title("Dataset: ChatDoctor iCliniq")
+    st.divider()
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
 
     # Load dataset
     dataset = load_data()
+    if dataset is None:
+        st.error("Failed to load the dataset. Please try again later.")
+        return
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -60,7 +60,7 @@ def main():
         st.write(question)
         st.write(f"Answer: {answer}")
 
-        user_question = st.text_area(f"Ask your own question for Question {i+1}", height=100)
+        user_question = st.text_area(f"Edit Question {i+1}", height=100)
         if st.button(f"Ask Question:{i+1}"):
            with st.spinner("Processing ..."):
                 prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question

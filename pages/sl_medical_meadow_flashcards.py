@@ -57,9 +57,10 @@ def main():
 
         # Display question and answer
         question = row['input']
-        answer   = row['output']
-
         st.write(question)
+        st.write(" ")
+
+        answer  = row['output']
         st.write(f"Answer: {answer}")
         st.divider()
 

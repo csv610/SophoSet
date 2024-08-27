@@ -64,9 +64,10 @@ def main():
 
         # Display question and answer
         question = row['Pre-Revision Question']
-        answer   = row['Pre-Revision Correct Answer']
-
         st.write(question)
+        st.write(" ")
+
+        answer   = row['Pre-Revision Correct Answer']
         st.write(f"Answer: {answer}")
 
         st.divider()

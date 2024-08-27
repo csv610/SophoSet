@@ -110,14 +110,13 @@ def view_dataset():
         row = dataset[i]
         st.header(f"Question: {i + 1}")
 
-        # Display question and answer
+        # Display question 
         question  = row['question']
-        answer    = row['answer']
-        choices   = row['options']
-
-        # Use the helper function to display text with custom font size and add spacing
         st.write(question)
         st.write("")  # Add vertical space
+
+        # Display  choices
+        choices   = row['options']
         st.write(choices)
         st.write("")  # Add vertical space
 
@@ -126,7 +125,9 @@ def view_dataset():
             if row[image_key] is not None:
                image = row[image_key]
                st.image(image, caption = f"Qs: {i} Image{j}")
+        st.write("")  # Add vertical space
 
+        answer    = row['answer']
         st.write(f"Answer: {answer}")
         st.write("")  # Add vertical space
 

@@ -75,16 +75,18 @@ def view_dataset():
 
         # Display question and answer
         question  = row['question']
-        answer    = row['answer']
-        choices   = row['options']
-        image     = row['image']
-
-        # Use the helper function to display text with custom font size and add spacing
         st.write(question)
         st.write("")  # Add vertical space
+
+        choices = row['options']
         st.write(choices)
+        st.write("")  # Add vertical space
+
+        image = row['image']
         st.image(image, caption=f"Qs:{i}")
         st.write("")  # Add vertical space
+
+        answer = row['answer']
         st.write(f"Answer: {answer}")
         st.write("")  # Add vertical space
 

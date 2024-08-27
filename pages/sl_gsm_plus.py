@@ -58,11 +58,10 @@ def main():
         st.header(f"Question: {i + 1}")
 
         question = row['question']
-        answer = row['answer']
-
         st.write(question)
         st.write("")
-        
+
+        answer = row['answer']
         # Create a unique key for each button
         button_key = f"show_answer_{i}"
         if st.button("Show Answer", key=button_key):

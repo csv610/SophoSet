@@ -7,17 +7,6 @@ st.set_page_config(layout="wide")
 # Load the dataset
 @st.cache_data()
 def load_data(subset, split):
-    """
-    Load the specified subset and split of the AI2 ARC dataset.
-
-    Args:
-        subset (str): The subset of the dataset to load ('ARC-Challenge' or 'ARC-Easy').
-        split (str): The split of the dataset to load ('train', 'validation', or 'test').
-
-    Returns:
-        Dataset: The specified subset and split of the dataset.
-    """
-
     model_name  = "allenai/ai2_arc"
     try:
        ds = load_dataset(model_name, subset)
@@ -96,23 +85,18 @@ def view_dataset():
         st.header(f"Question: {i + 1}")
 
         # Display question and answer
-        question  = row['question']
-        answer    = row['answerKey']
-        choices   = row['choices']['text']
+        st.write(row['question'])
+        st.write(" ")
 
+        choices = row['choices']['text']
         # Format the choices as (A), (B), etc.
         formatted_choices = [f"({choice_labels[j]}) {choices[j]}" for j in range(len(choices))]
-
-        # Use the helper function to display text with custom font size and add spacing
-        st.write(question)
-        st.write("")  # Add vertical space
 
         for formatted_choice in formatted_choices:
             st.write(formatted_choice)
         st.write("")  # Add vertical space
 
-        st.write(f"Answer: {answer}")
-        st.write("")  # Add vertical space
+        st.write(f"Answer: {row['answerKey']}")
 
         st.divider()  
 

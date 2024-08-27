@@ -51,16 +51,15 @@ def view_dataset():
 
         # Display question and answer
         question = row['question']
+        st.write(question)
+        st.write("")  # Add vertical space
+
         op1      = row['correct_answer']
         op2      = row['distractor1']
         op3      = row['distractor2']
         op4      = row['distractor3']
         options  = [op1, op2, op3, op4]
         random.shuffle(options)
-
-        # Use the helper function to display text with custom font size and add spacing
-        st.write(question)
-        st.write("")  # Add vertical space
 
         st.write(options)
         st.write("")  # Add vertical space

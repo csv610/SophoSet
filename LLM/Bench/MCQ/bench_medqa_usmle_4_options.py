@@ -1,5 +1,7 @@
 import pandas as pd
 import logging
+import random
+import argparse
 
 from tqdm import tqdm
 from llm_chat import LLMChat
@@ -14,18 +16,28 @@ OUTPUT_FILE = "medqa_usmle_4_result.csv"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def process_subset(llm, split):
+def convert_integer_to_letter(labels):
+    return [chr(65 + label) for label in labels]
+
+def process_subset(llm, split, nsamples=None):
     try:
         dataset = load_dataset(MODEL_ID)
-        split_data = dataset[split]
+        dataset = dataset[split]
     except Exception as e:
         logger.error(f"Error loading dataset for {split} split: {str(e)}")
         return None
+    
+    if nsamples is not None and nsamples < len(dataset):
+        indices = random.sample(range(len(dataset)), nsamples)
+    else:
+        indices = range(len(dataset))
 
     data = []
-    for i, row in tqdm(enumerate(split_data), total=len(split_data), desc=f"Processing {split}"):
+    for i in tqdm(indices, desc=f"{split}", leave=False):
+        row = dataset[i]
         question = row['sent1']
         options = [row['ending0'], row['ending1'], row['ending2'], row['ending3']]
+        label   = chr(65+row['label'])
         
         try:
             llm_response = llm.get_answer(question, options)
@@ -36,18 +48,18 @@ def process_subset(llm, split):
         
         data.append({
             'id': f"{split}_{i+1}",
-            'Question': question,
-            'Options': options,
-            'Answer': row['label'],
+#        'Question': question,
+#            'Options': options,
+            'Answer': label,
             'llama3.1': llm_answer
         })
     return pd.DataFrame(data)
 
-def process_dataset():
+def process_dataset(nsamples = None):
     dataframes = {}
     llm = LLMChat("llama3.1")  # Assuming you have an LLMChat class defined
     for split in SPLITS:
-        df = process_subset(llm, split)
+        df = process_subset(llm, split, nsamples)
         if df is not None:
             dataframes[split] = df
             logger.info(f"Loaded {len(df)} questions from {split} split")
@@ -66,5 +78,16 @@ def process_dataset():
         logger.error("No data was loaded. Unable to create output file.")
 
 if __name__ == "__main__":
-    process_dataset()
+    parser = argparse.ArgumentParser(description="Process MedQA USMLE-4 dataset")
+    parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    args = parser.parse_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+
+    logger.info(f"Starting script with {args.nsamples if args.nsamples else 'all'} samples")
+    process_dataset(nsamples=args.nsamples)
+    logger.info("Script completed successfully")
+
 

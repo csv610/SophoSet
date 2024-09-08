@@ -7,17 +7,15 @@ from tqdm import tqdm
 from llm_chat import LLMChat
 from datasets import load_dataset
 
+
 # Constants
-MODEL_ID = "GBaker/MedQA-USMLE-4-options-hf"
-SPLITS = ["train", "validation", "test"]
-OUTPUT_FILE = "medqa_usmle_4_result.csv"
+MODEL_ID = "GBaker/MedQA-USMLE-4-options"
+SPLITS = ["train", "test"]
+OUTPUT_FILE = "medqa_usmle_4_option2_result.csv"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-def convert_integer_to_letter(labels):
-    return [chr(65 + label) for label in labels]
 
 def process_subset(llm, split, nsamples=None):
     try:
@@ -35,9 +33,9 @@ def process_subset(llm, split, nsamples=None):
     data = []
     for i in tqdm(indices, desc=f"{split}", leave=False):
         row = dataset[i]
-        question = row['sent1']
-        options = [row['ending0'], row['ending1'], row['ending2'], row['ending3']]
-        label   = chr(65+row['label'])
+        question = row['question']
+        options  = list(row['options'].values())
+        label    = row['answer_idx']
         
         try:
             llm_response = llm.get_answer(question, options)

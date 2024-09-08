@@ -1,6 +1,5 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
-
 import time
 
 class LLMChat:
@@ -27,55 +26,52 @@ class LLMChat:
         words = sentence.split()
         return len(words)
 
-    def get_mcq_answer(self, question, choices):
-        # Dynamically create the choices string
-        choices_str = "\n".join([f"{chr(65 + i)}) {choice}" for i, choice in enumerate(choices)])
-
-        num_input_words = self.count_words(question) + sum(self.count_words(choice) for choice in choices)
+    def get_answer(self, question, choices=None, cot_prompt=False):
+        """Returns an answer. If choices are provided, it handles multiple choice; otherwise, it handles open-ended questions."""
         
-        prompt = self.mcq_prompt_template.format(
-            question=question,
-            choices=choices_str
-        )
-        t0 = time.time()
-        response = (ChatPromptTemplate.from_template(prompt) | self.model).invoke({})
-
-        t1 = time.time()
-
-        num_output_words = self.count_words(response)
-        elapsed_time = t1 - t0
-        answer, explanation = response.split("\n", 1)
-        retval = {
-               "num_input_words": num_input_words,
-               "num_output_words": num_output_words,
-               "response_time": elapsed_time,
-               "answer": answer,
-               "explanation": explanation
-        }
-        
-        return answer, explanation
-
-    def get_answer(self, question, cot_prompt=False):
-
         num_input_words = self.count_words(question)
 
-        t0 = time.time()
-
-        if cot_prompt:
-           response = (self.explain_prompt_template | self.model).invoke({ "question": question })
+        # If choices are provided, handle as an MCQ
+        if choices:
+            choices_str = "\n".join([f"{chr(65 + i)}) {choice}" for i, choice in enumerate(choices)])
+            num_input_words += sum(self.count_words(choice) for choice in choices)
+            
+            # Create the prompt with choices
+            prompt = self.mcq_prompt_template.format(
+                question=question,
+                choices=choices_str
+            )
         else:
-           response = (self.default_prompt_template | self.model).invoke({ "question": question })
+            # If no choices, use the default or explanation prompt
+            if cot_prompt:
+                prompt = self.explain_prompt_template.format(question=question)
+            else:
+                prompt = self.default_prompt_template.format(question=question)
 
+        # Measure response time
+        t0 = time.time()
+        response = (ChatPromptTemplate.from_template(prompt) | self.model).invoke({})
         t1 = time.time()
 
         num_output_words = self.count_words(response)
         elapsed_time = t1 - t0
+        
+        # If it's an MCQ, extract the answer letter
+        if choices:
+            answer_line = response.split("\n", 1)[0].strip()  # Get the first line
+            answer = answer_line[0]  # Extract only the first character (A, B, C, etc.)
+            explanation = response.split("\n", 1)[1] if "\n" in response else ""
+        else:
+            # For non-MCQ, the answer is the full response
+            answer = response
+            explanation = None
+        
         retval = {
-               "num_input_words": num_input_words,
-               "num_output_words": num_output_words,
-               "response_time": elapsed_time,
-               "answer": response,
-               "explanation": []
+            "num_input_words": num_input_words,
+            "num_output_words": num_output_words,
+            "response_time": elapsed_time,
+            "answer": answer,
+            "explanation": explanation
         }
         
         return retval

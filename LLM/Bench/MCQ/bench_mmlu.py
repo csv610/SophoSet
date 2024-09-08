@@ -60,7 +60,6 @@ def process_subset(llm, subject, split, nsamples=None):
 
 def process_dataset(nsamples=None):
     logging.info(f"Starting MMLU dataset processing with nsamples={nsamples}")
-    print("Dataset: MMLU")
 
     # Dictionary of categories and their corresponding subjects
     categories = {

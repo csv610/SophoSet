@@ -10,7 +10,7 @@ class LLMChat:
             Question: {question}
             Choices:  {choices}
 
-            Answer: Let's carefully consider the subject matter and each of the provided choices before determining the most accurate answer. After evaluating the options, the answer is:
+            Answer: Let's carefully consider the subject matter and each of the provided choices before determining the most accurate answer. Your response must include the final answer first and then the explanation.
         """
         self.explain_prompt_template = ChatPromptTemplate.from_template("""
             Question: {question}

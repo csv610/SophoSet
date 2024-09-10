@@ -65,7 +65,7 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
 
     model_name = "llama3.1"
 
-    llm = LLMChat(model_name)
+    llm = LLMChat(model_name, temperature=0.0)
     logger.info(f"Initialized LLMChat with model: {model_name}")
 
     for subset in subsets:

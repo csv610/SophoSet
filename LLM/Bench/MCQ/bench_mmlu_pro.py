@@ -57,11 +57,11 @@ def process_subset(llm, split, nsamples=None):
     logger.info(f"Processed {len(df)} questions for {split} split")
     return df
 
-def process_dataset():
+def process_dataset(nsamples = None):
     logger.info("Starting dataset processing: MMLU Pro")
     
     model_name = "llama3.1"
-    llm = LLMChat(model_name)
+    llm = LLMChat(model_name,temperature=0.0)
     logger.info(f"Initialized LLMChat with model: {model_name}")
     
     # List of available splits
@@ -70,7 +70,7 @@ def process_dataset():
     # Collect all DataFrames
     dataframes = []
     for split in splits:
-        df = process_subset(llm, split)
+        df = process_subset(llm, split, nsamples)
         if df is not None:
             dataframes.append(df)
     
@@ -83,4 +83,9 @@ def process_dataset():
     logger.info("Combined DataFrame written to mmlu_pro_result.csv")
 
 if __name__ == "__main__":
-    process_dataset()
+    parser = argparse.ArgumentParser(description="Process MMLU Pro dataset")
+    parser.add_argument("-n", "--nsamples", type=int, default=None,
+                        help="Number of random samples to process per subset and split. If not provided, process all samples.")
+    args = parser.parse_args()
+    
+    process_dataset(nsamples=args.nsamples)

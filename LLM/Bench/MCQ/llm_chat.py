@@ -3,8 +3,8 @@ from langchain_ollama.llms import OllamaLLM
 import time
 
 class LLMChat:
-    def __init__(self, model_name):
-        self.model = OllamaLLM(model=model_name)
+    def __init__(self, model_name, temperature = 0.5):
+        self.model = OllamaLLM(model=model_name, temperature = temperature)
         self.mcq_prompt_template = """
             Question: {question}
             Choices:  {choices}

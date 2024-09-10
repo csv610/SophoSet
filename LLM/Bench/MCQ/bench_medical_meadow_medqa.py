@@ -26,6 +26,8 @@ def process_subset(llm, split = "train", nsamples=None):
         indices = random.sample(range(len(dataset)), nsamples)
     else:
         indices = range(len(dataset))
+
+    model_name = llm.get_model_name()
     
     data = []
     for i in tqdm(indices, desc="Processing questions"):
@@ -55,11 +57,11 @@ def process_subset(llm, split = "train", nsamples=None):
             llm_answer = "Error: Unable to get answer"
 
         data.append({
-            'id': f"{split}_{i + 1}",
+            'id': f"{split}_{i+1}",
             'Question': question_text,
             'Choices': choices,
             'Answer': answer,
-            "llama3.1": llm_answer
+            model_name: llm_answer
         })
 
     df = pd.DataFrame(data)
@@ -68,7 +70,10 @@ def process_subset(llm, split = "train", nsamples=None):
 
 def process_dataset(nsamples=None):
     logger.info("Starting dataset processing: medical meadow medqa")
-    llm = LLMChat("llama3.1")
+
+    model_name = "llama3.1"
+
+    llm = LLMChat(model_name)
     final_frame = process_subset(llm, nsamples=nsamples)
 
     if final_frame is not None:

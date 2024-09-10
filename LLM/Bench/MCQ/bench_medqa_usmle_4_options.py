@@ -30,6 +30,8 @@ def process_subset(llm, split, nsamples=None):
     else:
         indices = range(len(dataset))
 
+    model_name = llm.get_model_name()
+
     data = []
     for i in tqdm(indices, desc=f"{split}", leave=False):
         row = dataset[i]
@@ -46,16 +48,17 @@ def process_subset(llm, split, nsamples=None):
         
         data.append({
             'id': f"{split}_{i+1}",
-#        'Question': question,
-#            'Options': options,
-            'Answer': label,
-            'llama3.1': llm_answer
+#           'Question': question,
+#           'Options': options,
+            'answer': label,
+            model_name: llm_answer
         })
     return pd.DataFrame(data)
 
 def process_dataset(nsamples = None):
     dataframes = {}
-    llm = LLMChat("llama3.1")  # Assuming you have an LLMChat class defined
+    model_name = "llama3.1"
+    llm = LLMChat(model_name)  # Assuming you have an LLMChat class defined
     for split in SPLITS:
         df = process_subset(llm, split, nsamples)
         if df is not None:

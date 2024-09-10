@@ -76,3 +76,7 @@ class LLMChat:
         
         return retval
 
+    def get_model_name(self) -> str:
+        """Returns the name of the model being used."""
+        return self.model.model
+

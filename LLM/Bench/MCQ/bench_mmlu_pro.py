@@ -29,6 +29,8 @@ def process_subset(llm, split, nsamples=None):
         indices = range(len(dataset))
         logger.info(f"Processing all {len(dataset)} questions from {split} split")
 
+    model_name = llm.get_model_name()
+
     data = []
     for i in tqdm(indices, total=len(indices), desc=f"Processing questions ({split})"):
         row = dataset[i]
@@ -44,10 +46,11 @@ def process_subset(llm, split, nsamples=None):
             llm_answer = "Error"
 
         data.append({
-            'Question': question,
-            'Choices': choices,
-            'Answer': answer,
-            'llama3.1': llm_answer
+            'id':f"{split}_{i+1}",
+#           'Question': question,
+#           'Choices': choices,
+            'answer': answer,
+            model_name: llm_answer
         })
     
     df = pd.DataFrame(data)
@@ -57,8 +60,9 @@ def process_subset(llm, split, nsamples=None):
 def process_dataset():
     logger.info("Starting dataset processing: MMLU Pro")
     
-    llm = LLMChat("llama3.1")
-    logger.info("Initialized LLMChat with model: llama3.1")
+    model_name = "llama3.1"
+    llm = LLMChat(model_name)
+    logger.info("Initialized LLMChat with model: f"{model_name}")
     
     # List of available splits
     splits = ["test", "validation"]

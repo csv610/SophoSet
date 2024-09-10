@@ -51,6 +51,8 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
     data = []
     logger.info(f"Starting processing for {subset} - {split}")
 
+    model_name = llm.get_model_name()
+
     for i in tqdm(indices, desc=f"Processing {subset} {split}"):
         row = dataset[i]
         question, options = split_text(row['input'])
@@ -65,10 +67,10 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
 
         data.append({
             'id': f"{subset}_{split}_{i+1}",
-            'question': question, 
-            'options':  options, 
+#           'question': question, 
+#           'options':  options, 
             'answer': row['target'],
-            'llama3.1' : llm_answer
+            model_name : llm_answer
         })
 
     logger.info(f"Completed processing {len(data)} items for {subset} - {split}")
@@ -110,8 +112,11 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
     logger.info("Starting dataset processing: Big Bench Hard")
 
     frames = []
-    llm = LLMChat("llama3.1")
-    logger.info("Initialized LLMChat with model: llama3.1")
+
+    model_name = "llama3.1"
+
+    llm = LLMChat(model_name)
+    logger.info("Initialized LLMChat with model: f"{model_name}")
     
     for subset in SUBSETS:
         for split in SPLITS:

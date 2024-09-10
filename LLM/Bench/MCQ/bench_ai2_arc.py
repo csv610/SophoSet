@@ -27,6 +27,8 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
     else:
         indices = range(len(dataset))
 
+    model_name = llm.get_model_name()
+
     data = []
     for i in tqdm(indices, desc=f"{subset} - {split}", leave=False):
         row = dataset[i]
@@ -46,7 +48,7 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
             'question': question,
             'choices': choices,
             'answer_key': row['answerKey'],
-            'llama3.1': llm_answer
+            model_name: llm_answer
         }
         data.append(newdata)
         
@@ -61,8 +63,10 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
 
     frames = []
 
-    llm = LLMChat("llama3.1")
-    logger.info("Initialized LLMChat with model: llama3.1")
+    model_name = "llama3.1"
+
+    llm = LLMChat(model_name)
+    logger.info("Initialized LLMChat with model: f"{model_name}")
 
     for subset in subsets:
         for split in splits:

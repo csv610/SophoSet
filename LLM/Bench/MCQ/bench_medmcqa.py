@@ -16,13 +16,15 @@ def process_subset(llm, split="train", nsamples=None):
         indices = random.sample(range(len(dataset)), nsamples)
     else:
         indices = range(len(dataset))
+
+    model_name = llm.get_model_name()
     
     data = []
     for i in tqdm(indices, desc="Processing questions"):
         row = dataset[i]
         question = row['question']
         options = [row['opa'], row['opb'], row['opc'], row['opd']]
-        correct_answer = row['cop']
+        answer = row['cop']
         explanation = row['exp']
 
         try:
@@ -33,19 +35,22 @@ def process_subset(llm, split="train", nsamples=None):
             llm_answer = "Error"
 
         data.append({
-            "id": f"{split}_{i + 1}",
-            "question": question,
-            "options": options,
-            "correct_answer": answer,
-            "explanation": explanation,
-            "llama3.1": llm_answer
+            "id": f"{split}_{i+1}",
+#            "question": question,
+#            "options": options,
+            "answer": answer,
+#            "explanation": explanation,
+            model_name: llm_answer
         })
     
     return pd.DataFrame(data)
 
 def process_dataset(nsamples=None):
-    logging.info("Dataset: Medmcqa dataset")
-    llm = LLMChat("llama3.1")
+    logging.info("Dataset: Medmcqa")
+
+    model_name = "llama3.1"
+    llm = LLMChat(model_name)
+
     df = process_subset(llm, nsamples=nsamples)
     if df is not None:
         csv_filename = "medmcqa_result.csv"

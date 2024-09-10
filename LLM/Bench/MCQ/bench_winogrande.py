@@ -24,6 +24,8 @@ def process_subset(llm, split, nsamples = None):
     data = []
     
     logger.info(f"Processing {len(indices)} samples from the {split} split")
+
+    model_name = llm.get_model_name()
     
     for i in tqdm(indices, desc="Processing items"):
         row = dataset[i]
@@ -40,9 +42,9 @@ def process_subset(llm, split, nsamples = None):
 
         data.append({
             "id": f"{split}_{i+1}",
-            "question": question,
+#           "question": question,
             "answer": row['response'],
-            "llama3.1": llm_answer
+            model_name: llm_answer
         })
     
     logger.info(f"Processed {len(data)} samples successfully")
@@ -52,7 +54,8 @@ def process_subset(llm, split, nsamples = None):
 
 def process_dataset(nsamples=None):
     logger.info("Starting dataset processing")
-    llm = LLMChat("llama3.1")
+    model_name = "llama3.1"
+    llm = LLMChat(model_name)
     df = process_subset(llm, "validation", nsamples)
 
     # Save the DataFrame to a CSV file

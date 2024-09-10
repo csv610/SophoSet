@@ -49,7 +49,7 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
         indices = range(len(dataset))
 
     data = []
-    logger.info(f"Starting processing for {subset} - {split}")
+    logger.info(f"Starting processing for {subset}-{split}")
 
     model_name = llm.get_model_name()
 
@@ -60,7 +60,6 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
         try:
             llm_response = llm.get_answer(question, options)
             llm_answer = llm_response["answer"]
-            logger.debug(f"Processed item {i+1} for {subset} - {split}")
         except Exception as e:
             logger.error(f"Error processing {subset} {split} item {i+1}: {str(e)}")
             llm_answer = "Error"
@@ -116,7 +115,7 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
     model_name = "llama3.1"
 
     llm = LLMChat(model_name)
-    logger.info("Initialized LLMChat with model: f"{model_name}")
+    logger.info(f"Initialized LLMChat with model: {model_name}")
     
     for subset in SUBSETS:
         for split in SPLITS:

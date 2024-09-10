@@ -62,7 +62,7 @@ def process_dataset():
     
     model_name = "llama3.1"
     llm = LLMChat(model_name)
-    logger.info("Initialized LLMChat with model: f"{model_name}")
+    logger.info(f"Initialized LLMChat with model: {model_name}")
     
     # List of available splits
     splits = ["test", "validation"]

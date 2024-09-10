@@ -37,7 +37,7 @@ def process_subset(llm, split, nsamples=None):
         row = dataset[i]
         question = row['question']
         options  = list(row['options'].values())
-        label    = row['answer_idx']
+        answer    = row['answer_idx']
         
         try:
             llm_response = llm.get_answer(question, options)
@@ -50,7 +50,7 @@ def process_subset(llm, split, nsamples=None):
             'id': f"{split}_{i+1}",
 #           'Question': question,
 #           'Options': options,
-            'answer': label,
+            'answer': answer,
             model_name: llm_answer
         })
     return pd.DataFrame(data)

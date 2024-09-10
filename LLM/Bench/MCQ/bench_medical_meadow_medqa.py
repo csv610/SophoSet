@@ -38,29 +38,28 @@ def process_subset(llm, split = "train", nsamples=None):
         answer = row['output']
         match = re.search(r"\?\s*(\{.*\})", question)
         if match:
-            question_text = question[:match.start()] + "?"
+            question = question[:match.start()] + "?"
             choices_dict_str = match.group(1)
             choices_dict = ast.literal_eval(choices_dict_str)
             choices = list(choices_dict.values())
         else:
-            question_text = question
             choices = []
 
         answer = answer.strip()[0]
 
         try:
-            llm_response = llm.get_answer(question_text, choices)
+            llm_response = llm.get_answer(question, choices)
             llm_answer = llm_response['answer']
-            logger.debug(f"LLM answer obtained for question {i + 1}")
+            logger.debug(f"LLM answer obtained for question {i+1}")
         except Exception as e:
             logger.error(f"Error getting LLM answer for question {i + 1}: {str(e)}")
-            llm_answer = "Error: Unable to get answer"
+            llm_answer = "Error"
 
         data.append({
             'id': f"{split}_{i+1}",
-            'Question': question_text,
-            'Choices': choices,
-            'Answer': answer,
+#           'Question': question_text,
+#           'Choices': choices,
+            'answer': answer,
             model_name: llm_answer
         })
 

@@ -45,8 +45,8 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
         
         newdata = {
             'id': f"{subset}_{split}_{i}",
-            'question': question,
-            'choices': choices,
+#           'question': question,
+#           'choices': choices,
             'answer_key': row['answerKey'],
             model_name: llm_answer
         }
@@ -66,7 +66,7 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
     model_name = "llama3.1"
 
     llm = LLMChat(model_name)
-    logger.info("Initialized LLMChat with model: f"{model_name}")
+    logger.info(f"Initialized LLMChat with model: {model_name}")
 
     for subset in subsets:
         for split in splits:

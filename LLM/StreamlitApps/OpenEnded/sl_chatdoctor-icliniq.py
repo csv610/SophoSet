@@ -58,17 +58,29 @@ def main():
         answer   = row['answer_icliniq']
 
         st.write(question)
-        st.write(f"Answer: {answer}")
 
-        user_question = st.text_area(f"Edit Question {i+1}", height=100)
-        if st.button(f"Ask Question:{i+1}"):
+        if st.button(f"Human Answer:{i+1}"):
+           st.write(f"Answer: {answer}")
+
+        if st.button(f"LLM Answer:{i+1}"):
            with st.spinner("Processing ..."):
-                prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
-                response = llm.get_answer(prompt)
-                st.write(f"Response: {response['response']}")
+                response = llm.get_answer(question)
+                st.write(f"Answer: {response['answer']}")
                 st.write(f"Number of Input words: {response['num_input_words']}")
                 st.write(f"Number of output  words: {response['num_output_words']}")
                 st.write(f"Time: {response['response_time']}")
+
+        if st.button(f"Ask Question: {i+1}"):
+           user_question = st.text_area(f"Edit Question {i+1}", height=100)
+           if user_question is not None:
+              print( "USER QUESTION; ", user_question)
+              with st.spinner("Processing ..."):
+                   prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
+                   response = llm.get_answer(prompt)
+                   st.write(f"Answer: {response['answer']}")
+                   st.write(f"Number of Input words: {response['num_input_words']}")
+                   st.write(f"Number of output  words: {response['num_output_words']}")
+                   st.write(f"Time: {response['response_time']}")
 
         st.divider()
 

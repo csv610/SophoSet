@@ -2,7 +2,6 @@ import streamlit as st
 from datasets import load_dataset
 import json
 from typing import Tuple, Optional
-from langchain_ollama import OllamaLLM
 from llm_chat import LLMChat
 
 st.set_page_config(layout="wide")
@@ -32,7 +31,7 @@ def load_data(split: str = "train"):
         return None
 
 @st.cache_resource
-def get_llm(model_name: str):
+def load_llm_model(model_name: str):
     """Initialize and cache the LLM."""
     return LLMChat(model_name)
 

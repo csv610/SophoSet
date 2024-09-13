@@ -2,7 +2,7 @@ import streamlit as st
 from datasets import load_dataset
 import json
 from typing import Tuple, Optional
-from llm_chat import LLMChat
+from llm_chat import load_llm_model, ask_llm
 
 st.set_page_config(layout="wide")
 
@@ -30,11 +30,6 @@ def load_data(split: str = "train"):
         st.error(f"Error loading dataset: {e}")
         return None
 
-@st.cache_resource
-def load_llm_model(model_name: str):
-    """Initialize and cache the LLM."""
-    return LLMChat(model_name)
-
 def config_panel(disease_mapping: dict) -> Tuple[Optional[dict], int, int, LLMChat]:
     """Handle the contents of the left panel (sidebar)."""
     st.sidebar.title("Navigation")
@@ -49,34 +44,7 @@ def config_panel(disease_mapping: dict) -> Tuple[Optional[dict], int, int, LLMCh
     total_pages = -(-total_items // num_items_per_page)  # Ceiling division
 
     selected_page = st.sidebar.selectbox("Page Number", options=range(1, total_pages + 1))
-    model_name  = st.sidebar.selectbox("LLM Model", options=['llama3.1'])
-    llm = get_llm(model_name)
-
-    return dataset, num_items_per_page, selected_page, llm
-
-def display_question(index: int, row: dict, llm: LLMChat, disease_mapping: dict):
-    """Display a single question with its text and corresponding disease name."""
-    st.header(f"Question: {index}")
-
-    text = row['text']
-    label = row['label']  # The label from the dataset
-
-    st.write(f"Symptoms: {text}")
-
-    # Map the label to the corresponding disease name using the reversed mapping
-    disease_name = disease_mapping.get(str(label), "Unknown Disease")
-    st.write(f"Disease: {disease_name}")
-
-    # Input box for the user to ask their own question, pre-filled with the default question text
-    default_qs = text + " What could be the disease?"
-    user_question = st.text_area(f"Ask your own question for Question {index}", value=default_qs, height=100)
-
-    if st.button(f"Ask Question {index}"):
-        with st.spinner("Processing ..."):
-            response = llm.get_answer(user_question)
-            st.write("Response:", response)
-
-    st.divider()
+    return dataset, num_items_per_page, selected_page
 
 def view_dataset():
     """Main function to display the dataset viewer."""
@@ -85,7 +53,7 @@ def view_dataset():
     # Load the disease name mapping from the JSON file
     disease_mapping = load_disease_mapping()
 
-    dataset, num_items_per_page, selected_page, llm = config_panel(disease_mapping)
+    dataset, num_items_per_page, selected_page= config_panel(disease_mapping)
 
     if dataset is None:
         return
@@ -93,20 +61,31 @@ def view_dataset():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, len(dataset))
 
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+    
     for i in range(start_index, end_index):
-        display_question(i + 1, dataset[i], llm, disease_mapping)
+        st.header(f"Question: {i}")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if selected_page > 1:
-            if st.button("Previous Page"):
-                st.session_state.page = selected_page - 1
-                st.rerun()
-    with col2:
-        if selected_page < -(-len(dataset) // num_items_per_page):
-            if st.button("Next Page"):
-                st.session_state.page = selected_page + 1
-                st.rerun()
+        text = dataset[i]['text']
+        st.write(f"Symptoms: {text}")
+
+        label = dataset[i]['label']  # The label from the dataset
+
+        # Map the label to the corresponding disease name using the reversed mapping
+        disease_name = disease_mapping.get(str(label), "Unknown Disease")
+        st.write(f"Disease: {disease_name}")
+
+        # Input box for the user to ask their own question, pre-filled with the default question text
+        default_qs = text + " What could be the disease?"
+        user_question = st.text_area(f"Ask your own question for Question {i}", value=default_qs, height=100)
+
+        if st.button(f"Ask Question {i}"):
+            with st.spinner("Processing ..."):
+                response = llm.get_answer(user_question)
+                st.write("Response:", response)
+
+    st.divider()
 
 if __name__ == "__main__":
     view_dataset()

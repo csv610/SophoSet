@@ -1,6 +1,8 @@
-import streamlit as st
-from datasets import load_dataset
 import re
+import streamlit as st
+
+from llm_chat import load_llm_model, ask_llm
+from datasets import load_dataset
 
 st.set_page_config(layout="wide")
 
@@ -80,12 +82,17 @@ def view_dataset():
     end_index = min(start_index + num_items_per_page, len(dataset))
 
     choice_labels = ["A", "B", "C", "D", "E"]
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
         st.header(f"Question: {i + 1}")
 
+        question = row['question']
+
         # Display question and answer
-        st.write(row['question'])
+        st.write(question)
         st.write(" ")
 
         choices = row['choices']['text']
@@ -96,7 +103,10 @@ def view_dataset():
             st.write(formatted_choice)
         st.write("")  # Add vertical space
 
-        st.write(f"Answer: {row['answerKey']}")
+        if st.button(f"Human Answer:{i+1}"):
+            st.write(f"Answer: {row['answerKey']}")
+
+        ask_llm(llm, question, choices, i+1)
 
         st.divider()  
 

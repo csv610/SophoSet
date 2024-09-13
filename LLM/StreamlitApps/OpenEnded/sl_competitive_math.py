@@ -1,7 +1,7 @@
 import streamlit as st
 import re
 
-from  llm_chat import LLMChat
+from  llm_chat import load_llm_model, ask_llm
 from datasets import load_dataset
 
 st.set_page_config(layout="wide")
@@ -12,11 +12,6 @@ def load_data(split):
     model_name = "qwedsacf/competition_math"
     ds = load_dataset(model_name)
     return ds[split]
-
-@st.cache_resource
-def load_llm_model(model_name: str = "llama3.1"):
-    """Initialize and cache the LLM."""
-    return LLMChat(model_name)
 
 def rewrite_sentence(text):
     # First, identify and escape LaTeX dollar signs
@@ -56,7 +51,8 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    llm = load_llm_model()
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
 
     for i in range(start_index, end_index):
         row = dataset[i]
@@ -64,19 +60,14 @@ def main():
 
         # Display question and answer
         problem = rewrite_sentence(row['problem'])
-
         st.write(problem)
 
         if st.button(f"Human Answer :{i+1}"):
            st.write(f"Solution: {row['solution']}")
 
-        if st.button(f"LLM Answer :{i+1}"):
-           with st.spinner("Processing ..."):
-                response = llm.get_answer(problem)
-                st.write(f"Answer: {response['answer']}")
-
+        ask_llm(llm, problem, i+1)
+        
         st.divider()
 
 if __name__ == "__main__":
     main()
-

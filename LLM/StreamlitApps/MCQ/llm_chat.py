@@ -80,3 +80,37 @@ class LLMChat:
         """Returns the name of the model being used."""
         return self.model.model
 
+import streamlit as st
+
+@st.cache_resource
+def load_llm_model(model_name: str):
+    """Initialize and cache the LLM."""
+    return LLMChat(model_name)
+
+def ask_llm(llm, question, options, rowid):
+
+    if st.button(f"LLM Answer:{rowid}"):
+        with st.spinner("Processing ..."):
+            try:
+                response = llm.get_answer(question, options)
+                st.write(f"Answer: {response['answer']}")
+                st.write(f"Number of Input words: {response['num_input_words']}")
+                st.write(f"Number of output  words: {response['num_output_words']}")
+                st.write(f"Time: {response['response_time']}")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+
+    if st.button(f"Ask Question: {rowid}"):
+        user_question = st.text_area(f"Edit Question {rowid}", height=100)
+        if user_question is not None:
+              with st.spinner("Processing ..."):
+                   prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
+                   try:
+                       response = llm.get_answer(prompt)
+                       st.write(f"Answer: {response['answer']}")
+                       st.write(f"Number of Input words: {response['num_input_words']}")
+                       st.write(f"Number of output  words: {response['num_output_words']}")
+                       st.write(f"Time: {response['response_time']}")
+                   except Exception as e:
+                       st.error(f"An error occurred: {e}")
+

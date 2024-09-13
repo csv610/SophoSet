@@ -14,38 +14,6 @@ def load_data(split):
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
         return None
-
-@st.cache_resource
-def load_llm_model(model_name: str = "llama3.1"):
-    """Initialize and cache the LLM."""
-    return LLMChat(model_name)
-
-def talk_to_llm(i, row, model_name):
-    question = row['input']
-
-    llm = load_llm_model(model_name)  # Changed from upload_llm_model to load_llm_model
-
-    if st.button(f"LLM Answer:{i+1}"):
-        with st.spinner("Processing ..."):
-
-            response = llm.get_answer(question)
-            st.write(f"Answer: {response['answer']}")
-            st.write(f"Number of Input words: {response['num_input_words']}")
-            st.write(f"Number of output  words: {response['num_output_words']}")
-            st.write(f"Time: {response['response_time']}")
-
-    if st.button(f"Ask Question: {i+1}"):
-        user_question = st.text_area(f"Edit Question {i+1}", height=100)
-        if user_question is not None:
-              print( "USER QUESTION; ", user_question)
-              with st.spinner("Processing ..."):
-                   prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
-                   response = llm.get_answer(prompt)
-                   st.write(f"Answer: {response['answer']}")
-                   st.write(f"Number of Input words: {response['num_input_words']}")
-                   st.write(f"Number of output  words: {response['num_output_words']}")
-                   st.write(f"Time: {response['response_time']}")
-
 # Streamlit app
 def main():
     st.title("Dataset: Medical Meadow Wikidoc Patient Info")
@@ -76,6 +44,7 @@ def main():
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
     model_name = "llama3.1"
+    llm = load_llm_model(model_name)
 
     # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
@@ -83,19 +52,18 @@ def main():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {i + 1}")
 
-        # Display question and answer
         question = row['input']
-        st.write(question)
-        st.write(" ")
 
+        st.header(f"Question: {i + 1}") 
+        st.write(question)
+        
         if st.button(f"Human Answer:{i+1}"):
             answer  = row['output']
             st.write(f"Answer: {answer}")
 
-        talk_to_llm(i, row, model_name)
-
+        ask_llm(llm, question, i+1)
+    
         st.divider()
 
 if __name__ == "__main__":

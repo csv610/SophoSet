@@ -17,10 +17,6 @@ def load_data(subset, split):
         st.error(f"Error loading dataset: {str(e)}")
         return None
     
-@st.cache_resource
-def load_llm_model(model_name: str = "llama3.1"):
-    """Initialize and cache the LLM."""
-    return LLMChat(model_name)
 
 def rewrite_sentence(text):
     # First, identify and escape LaTeX dollar signs
@@ -68,33 +64,38 @@ def config_panel():
 
     return dataset, num_items_per_page, selected_page
 
-def talk_to_llm(i, row, model_name):
-    question = row['question']
+@st.cache_resource
+def load_llm_model(model_name: str = "llama3.1"):
+    """Initialize and cache the LLM."""
+    return LLMChat(model_name)
 
-    llm = load_llm_model(model_name)  # Changed from upload_llm_model to load_llm_model
+def talk_to_llm(llm, question, rowid:
 
-    if st.button(f"LLM Answer:{i+1}"):
+    if st.button(f"LLM Answer:{rowid}"):
         with st.spinner("Processing ..."):
+            try:
+                response = llm.get_answer(question)
+                st.write(f"Answer: {response['answer']}")
+                st.write(f"Number of Input words: {response['num_input_words']}")
+                st.write(f"Number of output  words: {response['num_output_words']}")
+                st.write(f"Time: {response['response_time']}")
+            except Exception as e:
+                st.error(f"Error getting answer: {str(e)}")  # Handle exception
 
-            response = llm.get_answer(question)
-            st.write(f"Answer: {response['answer']}")
-            st.write(f"Number of Input words: {response['num_input_words']}")
-            st.write(f"Number of output  words: {response['num_output_words']}")
-            st.write(f"Time: {response['response_time']}")
-
-    if st.button(f"Ask Question: {i+1}"):
-        user_question = st.text_area(f"Edit Question {i+1}", height=100)
+    if st.button(f"Ask Question: {rowid}"):
+        user_question = st.text_area(f"Edit Question {rowid}", height=100)
         if user_question is not None:
-              print( "USER QUESTION; ", user_question)
-              with st.spinner("Processing ..."):
-                   prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
-                   response = llm.get_answer(prompt)
-                   st.write(f"Answer: {response['answer']}")
-                   st.write(f"Number of Input words: {response['num_input_words']}")
-                   st.write(f"Number of output  words: {response['num_output_words']}")
-                   st.write(f"Time: {response['response_time']}")
-
-
+            print("USER QUESTION; ", user_question)
+            with st.spinner("Processing ..."):
+                prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
+                try:
+                    response = llm.get_answer(prompt)
+                    st.write(f"Answer: {response['answer']}")
+                    st.write(f"Number of Input words: {response['num_input_words']}")
+                    st.write(f"Number of output  words: {response['num_output_words']}")
+                    st.write(f"Time: {response['response_time']}")
+                except Exception as e:
+                    st.error(f"Error getting answer: {str(e)}")  # Handle exception
 
 # Streamlit app
 def view_dataset():
@@ -113,6 +114,7 @@ def view_dataset():
     end_index = min(start_index + num_items_per_page, len(dataset))
 
     model_name = "llama3.1"
+    llm = load_llm_model(model_name)
 
     for i in range(start_index, end_index):
         row = dataset[i]
@@ -136,7 +138,7 @@ def view_dataset():
             if st.button(f"Show Solution {i}"):
                 st.write(f"Solution: {solution}")
 
-        talk_to_llm(i, row, model_name)
+        talk_to_llm(llm, question, i+1)
 
         st.divider()  # Divider between items
 

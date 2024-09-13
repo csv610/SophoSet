@@ -1,9 +1,6 @@
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
-import re
+from llm_chat import load_llm_model, ask_llm
 
 st.set_page_config(layout="wide")
 
@@ -41,9 +38,12 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
-        st.header(f"Question: {start_index + i + 1}")
+        st.header(f"Question: {i + 1}")
 
         # Display question and answer
         question = row['question']
@@ -59,11 +59,16 @@ def main():
         st.write(f"(B): {opb}")
         st.write(f"(C): {opc}")
         st.write(f"(D): {opd}")
-        st.write(f"Answer: {cop}")
-        st.write(f"Explanation: {exp}")
 
+        # Displaying answer with a button
+        if st.button(f"Human Answer:{i + 1}"):
+            st.write(f"Answer: {cop}")
 
-        st.markdown("---")  # Divider between items
+        # Displaying explanation with a button
+        if st.button(f"Explanation:{i + 1}"):
+            st.write(f"Explanation: {exp}")
+
+        st.divider()
 
 if __name__ == "__main__":
     main()

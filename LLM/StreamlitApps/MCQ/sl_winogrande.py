@@ -1,5 +1,6 @@
 import streamlit as st
 from datasets import load_dataset
+from llm_chat import load_llm_model, ask_llm
 
 # Load the dataset
 @st.cache_data()
@@ -34,13 +35,18 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
         st.header(f"Question: {i + 1}")
 
         # Display question and answer
         st.write(row['request'])
-        st.write(f"response: {row['response']}")
+        
+        if st.button(f"Human Answer:{i+1}"):
+            st.write(f"response: {row['response']}")
 
         st.divider()
 

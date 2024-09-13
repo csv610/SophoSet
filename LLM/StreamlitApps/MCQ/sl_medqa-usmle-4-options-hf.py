@@ -1,5 +1,6 @@
 import streamlit as st
 from datasets import load_dataset
+from llm_chat load_llm_model, ask_llm
 
 st.set_page_config(layout="wide")
 
@@ -45,17 +46,29 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
         st.header(f"Question: {i + 1}")
 
         # Display question and answer
-        st.write(row['sent1'])
-        st.write(f"(A) {row['ending0']}")
-        st.write(f"(B) {row['ending1']}")
-        st.write(f"(C) {row['ending2']}")
-        st.write(f"(D) {row['ending3']}")
-        st.write(f"Answer: {row['label']}")
+        question = row['sent1']
+        st.write(question)
+
+        # Create a list of options using row items
+        options = [row[f'ending{i}'] for i in range(4)]  # Assuming there are 4 options: ending0 to ending3
+        
+        # Display options with labels
+        for i, option in enumerate(options):
+            st.write(f"({chr(65 + i)}) {option}")  # chr(65) is 'A'
+
+        # Displaying answer with a button
+        if st.button(f"Human Answer: {i + 1}"):
+            st.write(f"Answer: {row['label']}")
+
+        ask_llm(lln, question, i+1)
 
         st.divider()
 

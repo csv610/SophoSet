@@ -1,4 +1,6 @@
 import streamlit as st
+
+from llm_chat import load_llm_model, ask_llm
 from datasets import load_dataset
 
 st.set_page_config(layout="wide")
@@ -34,9 +36,14 @@ def split_text(text):
         main_sentence = text[:options_index].strip()
         options = text[options_index + len("Options:"):].strip()
         
-        # Extract a clean list of options without labels
-        clean_options = [opt.strip() for opt in options.split(")") if opt.strip()]
-        
+        # Extract a clean list of options
+        clean_options = []
+        # Split by newline and then process each line
+        for opt in options.split("\n"):
+            stripped_opt = opt.strip()
+            if stripped_opt:  # Only add non-empty options
+                clean_options.append(stripped_opt.lstrip('-').strip())
+
         # Format options with labels (A), (B), etc.
         formatted_options = [f"({chr(65 + i)}) {opt}" for i, opt in enumerate(clean_options)]
         
@@ -113,18 +120,18 @@ def main():
     
     for i in range(start_index, end_index):  # Added colon here
         row = dataset[i]
-        st.subheader(f"Question {i + 1}")
-        st.divider()
-
+        st.header(f"Question {i + 1}")
+        
         input_text, options = split_text(row['input'])
         st.write(input_text)
+
 
         if options:
             for option in options:
                 st.write(option)
 
         # Use expander for the answer
-        with st.expander("Show Answer"):
+        if st.button(f"Human Answer:{i+1}"):
             st.write(f"Answer: {row['target']}")
 
         st.divider()

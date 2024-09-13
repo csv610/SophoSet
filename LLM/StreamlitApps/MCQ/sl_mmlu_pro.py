@@ -1,7 +1,8 @@
-import streamlit as st
-from datasets import load_dataset
 import string
+import streamlit as st
 
+from datasets import load_dataset
+from llm_chat import load_llm_model, ask_llm
 
 st.set_page_config(layout="wide")
 
@@ -49,6 +50,9 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    model_name = "llama3.1"
+    llm = load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
         st.header(f"Question: {i + 1}")
@@ -61,11 +65,11 @@ def main():
         choice_labels = list(string.ascii_uppercase)[:len(choices)]  # Generate labels from A to Z
         formatted_choices = [f"({label}) {choice}" for label, choice in zip(choice_labels, choices)]
         
-        st.write("**Choices:**")
         for choice in formatted_choices:
             st.write(choice)
 
-        st.write(f"Answer: {row['answer']}")
+        if st.button(f"Human Answer:{i+1}"):
+            st.write(f"Answer: {row['answer']}")
     
         st.divider() # Divider between items
 

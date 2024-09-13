@@ -1,7 +1,9 @@
-import streamlit as st
-from datasets import load_dataset
 import re
 import ast
+import streamlit as st
+
+from llm_chat import load_llm_model, ask_llm
+from datasets import load_dataset
 
 st.set_page_config(layout="wide")
 
@@ -48,6 +50,9 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    model_name = "llama3.1"
+    llm =  load_llm_model(model_name)
+
     for i in range(start_index, end_index):
         row = dataset[i]
         st.header(f"Question: {i + 1}")
@@ -59,22 +64,23 @@ def main():
         # Separate the question and choices
         match = re.search(r"\?\s*(\{.*\})", question)
         if match:
-            question_text = question[:match.start()] + "?"
+            question= question[:match.start()] + "?"
             choices_dict_str = match.group(1)
             choices_dict = ast.literal_eval(choices_dict_str)  # Convert string to dictionary
         else:
-            question_text = question
             choices_dict = {}
 
-        st.write(question_text)
+        st.write(question)
         
         if choices_dict:
-            st.write("Choices:")
+            st.write("Options:")
             for key, choice in choices_dict.items():
-                st.write(f"{key}: {choice}")
-
-        short_answer = answer.strip()[0]
-        st.write(f"Answer: {short_answer}")
+                st.write(f"{key} {choice}")
+        
+        # Displaying answer with a button
+        if st.button(f"Show Answer for Question {i + 1}"):
+            short_answer = answer.strip()[0]
+            st.write(f"Answer: {short_answer}")
 
         st.divider()
 

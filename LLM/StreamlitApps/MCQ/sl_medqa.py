@@ -1,24 +1,26 @@
 import streamlit as st
-from datasets import load_datasets
+
+from llm_chat import load_llm_model, ask_llm
+from datasets import load_dataset
 
 st.set_page_config(layout="wide")
 
 # Load the dataset
 @st.cache_data()
 def load_data(split):
-    ds = load_dataset("lmms-lab/OlympiadBench")
-    ds = ds[split]
-    return ds
+    model_name = "openlifescienceai/medqa"
+    ds = load_dataset(model_name)
+    return ds[split]
 
 # Streamlit app
 def main():
-    st.title("Dataset: OlympicArena")
-    st.divider()
+    st.title("MedQA Dataset")
 
-    # Sidebar for subject selection
+    # Sidebar for navigation
     st.sidebar.title("Navigation")
+
     # Split selection
-    split = st.sidebar.selectbox("Select Split", ["test_en", "test_cn"])
+    split = st.sidebar.selectbox("Select Split", ["train", "test", "dev"])
 
     # Load dataset
     dataset = load_data(split)
@@ -42,16 +44,24 @@ def main():
         row = dataset[i]
         st.header(f"Question: {i + 1}")
 
-        # Display instruction
-        st.write(row['question'])
+        data = row['data']
 
-        # Display images
-        if row['images']:
-            for image in row['images']:
-                try:
-                    st.image(image, caption=f"Item {i + 1}", width=500)
-                except Exception as e:
-                    st.write(f"Unable to load image from {url}: {e}")
+        # Extracting question, options, and correct answer
+        question = data.get('Question', 'No question available')
+        options  = data.get('Options', {})
+        
+        answer   = data.get('Correct Option', 'N/A')
+
+        # Displaying question
+        st.write(question)
+
+        # Displaying options
+        for option, answer in options.items():
+            st.write(f"{option}: {answer}")
+
+        # Displaying correct answer with a button
+        if st.button(f"Human Answer: {i + 1}"):
+            st.write(f"Answer: {answer}")
 
         st.divider()
 

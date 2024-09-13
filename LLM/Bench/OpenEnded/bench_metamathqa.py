@@ -1,4 +1,3 @@
-
 import random
 import logging
 import argparse
@@ -49,10 +48,10 @@ def process_subset(llm, split='train', nsamples=None):
     logger.info(f"Processed {len(subset_data)} samples")
     return pd.DataFrame(subset_data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Starting MetaMathQA dataset processing")
-    llm = LLMChat("llama3.1")
-    logger.info("Initialized LLMChat with llama3.1 model")
+    llm = LLMChat(model_name)
+    logger.info(f"Initialized LLMChat with {model_name} model")
 
     # Process the dataset
     df = process_subset(llm, nsamples=nsamples)
@@ -61,15 +60,16 @@ def process_dataset(nsamples=None):
         return
 
     # Write DataFrame to CSV
-    csv_filename = "metamathqa_result.csv"
-    df.to_csv(csv_filename, index=False)
-    logger.info(f"Results written to {csv_filename}")
+    filename = f"metamathqa_result_{model_name}.csv"
+    df.to_csv(filename, index=False)
+    logger.info(f"Results written to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process MetaMathQA dataset")
+    parser.add_argument("-m", "--model", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
     logger.info(f"Starting script with nsamples={args.nsamples}")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model, nsamples=args.nsamples)
     logger.info("Script completed")

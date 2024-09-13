@@ -81,16 +81,25 @@ def process_subset(llm, nsamples=None):
 
     return pd.DataFrame(results)
 
-def process_dataset(nsamples=None):
-    llm = LLMChat("llama3.1")
-    df = process_subset(llm,nsamples)
-    df.to_csv('symptom_disease_result.csv', index=False)
+def process_dataset(model_name: str, nsamples=None):
+    llm = LLMChat(model_name)
+
+    df = process_subset(llm, nsamples)
+
+    if df is empty:
+        print("No data to process.")
+        return
+    
+    filename = 'symptom_disease_result.csv'  # Create filename
+    df.to_csv(filename, index=False)  # Save results to CSV
+    print(f"Results saved to {filename} using model {model_name}.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Symptom Disease dataset")
     parser.add_argument("--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("--model_name", type=str, default="llama3.1", help="Name of the model to use.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
-
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
+    

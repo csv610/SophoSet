@@ -55,7 +55,7 @@ def process_subset(llm, split, nsamples = None):
         })
     return pd.DataFrame(data)
 
-def process_dataset(nsamples = None):
+def process_dataset(model_name, nsamples = None):
     logger.info("Starting dataset processing")
     llm = LLMChat("llama3.1")
 
@@ -66,7 +66,7 @@ def process_dataset(nsamples = None):
 
     for split in SPLITS:
         logger.info(f"Processing {split} split")
-        df = process_subset(llm, split, nsamples)
+        df = process_subset(llm, split, nsamples, model_name)
         if df.empty:
             logger.warning(f"Skipping {split} split due to processing error.")
             continue
@@ -76,9 +76,10 @@ def process_dataset(nsamples = None):
     # Combine all DataFrames
     if dataframes:
         combined_df = pd.concat(dataframes, ignore_index=True)
-        # Save the combined DataFrame to a CSV file
-        combined_df.to_csv('competitive_math_result.csv', index=False)
-        logger.info("Combined DataFrame saved to 'competitive_math_result.csv'")
+        # Create filename with model_name
+        filename = f'competitive_math_result_{model_name}.csv'
+        combined_df.to_csv(filename, index=False)
+        logger.info(f"DataFrame saved to '{filename}'")
     else:
         logger.warning("No data to combine and save.")
 
@@ -87,6 +88,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Competitive Math dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, 
                         help="Number of random samples to process per subset and split. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, 
+                        help="Name of the model to be used for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

@@ -49,23 +49,26 @@ def process_subset(llm, nsamples=None):
     df = pd.DataFrame(data)
     return df
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logging.info("Starting dataset processing: IMO Geometry")
-    llm = LLMChat("llama3.1")
+
+    llm = LLMChat(model_name)
+    
     df = process_subset(llm, nsamples)
     
     if df is not None:
         logging.info("Writing results to CSV file")
-        df.to_csv("imo_geometry_result.csv", index=False)
+        filename = f"imo_geometry_result_{model_name}.csv"
+        df.to_csv(filename, index=False)
         logging.info("Data has been written to imo_geometry_result.csv")
     else:
         logging.warning("No data to write to CSV")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process IMO Geometry dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
-     
-    
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
+

@@ -58,21 +58,24 @@ def process_subset(llm, split="train", nsamples=None):
     logger.info(f"Processed {len(data)} samples")
     return df
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Dataset: Medical Meadow Wikidoc Patient")
-    llm = LLMChat("llama3.1")
+
+    llm = LLMChat(model_name)
+
     df = process_subset(llm, nsamples=nsamples)
     
     if df is not None:
-        # Save the DataFrame to a CSV file
-        df.to_csv('medical_meadow_wikidoc_patient_result.csv', index=False)
+        filename = f'medical_meadow_wikidoc_patient_result_{model_name}.csv'
+        df.to_csv(filename, index=False)
         logger.info("DataFrame saved to medical_meadow_wikidoc_patient_result.csv")
     else:
         logger.error("Failed to process the dataset.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medical Meadow Wikidoc Patient dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(args.model_name, nsamples=args.nsamples)

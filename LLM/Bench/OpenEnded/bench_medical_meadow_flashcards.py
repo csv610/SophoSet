@@ -55,19 +55,22 @@ def process_subset(llm, nsamples=None):
     logger.info("Finished processing flashcards")
     return pd.DataFrame(data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Starting dataset processing")
-    llm = LLMChat("llama3.1")
+
+    llm = LLMChat(model_name)
+
     df = process_subset(llm)
     if df is not None:
-        csv_filename = "medical_meadow_flashcard_result.csv"
-        df.to_csv(csv_filename, index=False)
+        filename = f"medical_meadow_flashcards_{model_name}.csv"
+        df.to_csv(filename, index=False)
         logger.info(f"Results have been written to {csv_filename}")
     logger.info("Dataset processing completed")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medical Meadow Flashcards dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Model name to use for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

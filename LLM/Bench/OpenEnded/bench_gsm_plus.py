@@ -64,10 +64,12 @@ def process_subset(llm, split, nsamples=None):
     logger.info(f"Completed processing {nsamples} samples for split '{split}'")
     return pd.DataFrame(subset_data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     frames = []
-    logger.info("Initializing LLMChat with model 'llama3.1'")
-    llm = LLMChat("llama3.1")
+    
+    logger.info(f"Initializing LLMChat with model '{model_name}'")
+
+    llm = LLMChat(model_name)
 
     for split in SPLITS:
         logger.info(f"Starting processing for split '{split}'")
@@ -76,7 +78,11 @@ def process_dataset(nsamples=None):
         logger.info(f"Finished processing split '{split}'")
 
     result_df = pd.concat(frames, ignore_index=True)
-    output_file = 'gsm_plus_result.csv'
+    if result_df.empty:
+        logger.warning("No data to save. The DataFrame is empty.")
+        return result_df
+    
+    output_file = f'gsm_plus_result_{model_name}.csv'
     logger.info(f"Saving results to '{output_file}'")
     result_df.to_csv(output_file, index=False)
     logger.info(f"Results saved successfully. Total samples processed: {len(result_df)}")
@@ -86,6 +92,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run GSM-Plus benchmark")
     parser.add_argument("-n","--nsamples", type=int, default=None, 
                         help="Number of samples to process per split. If not specified, all samples will be processed.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", 
+                        help="Name of the model to use.")
     args = parser.parse_args()
-    process_dataset(nsamples=args.nsamples)
-    
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
+

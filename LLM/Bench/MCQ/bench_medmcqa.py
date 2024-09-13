@@ -45,22 +45,22 @@ def process_subset(llm, split="train", nsamples=None):
     
     return pd.DataFrame(data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logging.info("Dataset: Medmcqa")
 
-    model_name = "llama3.1"
     llm = LLMChat(model_name)
 
     df = process_subset(llm, nsamples=nsamples)
     if df is not None:
-        csv_filename = "medmcqa_result.csv"
-        df.to_csv(csv_filename, index=False)
-        logging.info(f"Results saved to {csv_filename}")
+        filename = f"medmcqa_result_{model_name}.csv"
+        df.to_csv(filename, index=False)
+        logging.info(f"Results saved to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medmcqa dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Model name to use for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
 

@@ -59,13 +59,13 @@ def process_subset(llm, subset, split, nsamples=None):
 
     return pd.DataFrame(results)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Starting TruthfulQA dataset processing")
 
     subsets = ['generation', 'multiple_choice']
     split = 'validation'
 
-    llm = LLMChat("llama3.1")
+    llm = LLMChat(model_name)
     
     frames = []
     for subset in subsets:
@@ -73,20 +73,24 @@ def process_dataset(nsamples=None):
         df = process_subset(llm, subset, split, nsamples)
         frames.append(df)
 
-    # Combine all DataFrames
+    if not frames:
+        logger.error("No data frames to combine.")
+        return None  # or handle as needed
+
     combined_df = pd.concat(frames, ignore_index=True)
 
     # Write to CSV
-    output_file = 'truthfulqa_result.csv'
+    output_file = f'truthfulqa_result_{model_name}.csv'
     combined_df.to_csv(output_file, index=False)
     logger.info(f"Results written to {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process TruthfulQA dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Model name to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
     logger.info(f"Starting script with nsamples={args.nsamples}")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(args.model_name, nsamples=args.nsamples)
     logger.info("Script completed successfully")
 

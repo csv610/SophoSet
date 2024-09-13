@@ -69,7 +69,7 @@ def process_subset(llm, subset, split, nsamples=None):
     logger.info(f"Completed processing {subset} - {split}")
     return pd.DataFrame(data)
 
-def process_dataset(nsamples = None):
+def process_dataset(model_name, nsamples=None):
     """
     Main function to process all subsets and splits of the GPQA dataset.
     
@@ -87,23 +87,30 @@ def process_dataset(nsamples = None):
     
     for subset in subsets:
         for split in splits:
-            df = process_subset(llm, subset, split, nsamples)
+            df = process_subset(llm, subset, split, nsamples, model_name)
             if df is not None:
                 frames.append(df)
                 logger.info(f"Added {subset} - {split} to the combined dataset")
     
     combined_df = pd.concat(frames, ignore_index=True)
     
-    output_file = "gpqa_result.csv"
-    combined_df.to_csv(output_file, index=False)
+    # Check if combined_df is empty before saving
+    if combined_df.empty:
+        logger.warning("No data to save. The combined DataFrame is empty.")
+        return
     
-    logger.info(f"Data written to {output_file}")
+    filename = f"gpqa_result_{model_name}.csv"
+    combined_df.to_csv(filename, index=False)
+    
+    logger.info(f"Data written to {filename}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process GPQA dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, 
+                        help="Name of the model to be used for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
 

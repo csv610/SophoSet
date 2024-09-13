@@ -66,14 +66,14 @@ def process_subset(llm, subset, split, nsamples=None):
     logger.info(f"Completed processing {subset}/{split}")
     return pd.DataFrame(data)
 
-def process_dataset(nsamples=None):
-    logger.info(f"Starting dataset processing: GSM8K (nsamples: {nsamples})")
+def process_dataset(model_name, nsamples=None):
+    logger.info(f"Starting dataset processing: {model_name} (nsamples: {nsamples})")
     
     subsets = ["main", "socratic"]
     splits = ["train", "test"]
 
-    llm = LLMChat("llama3.1")
-    logger.info("Initialized LLMChat with model: llama3.1")
+    llm = LLMChat(model_name)
+    logger.info(f"Initialized LLMChat with model: {model_name}")
 
     frames = []
     for subset in subsets:
@@ -82,17 +82,21 @@ def process_dataset(nsamples=None):
             if df is not None:
                 frames.append(df)
 
-    # Combine all dataframes
+    if not frames:
+        logger.warning("No data frames to combine. Exiting.")
+        return None
+
     combined_df = pd.concat(frames, ignore_index=True)
 
     # Write to CSV
-    output_file = "gsm8k_result.csv"
+    output_file = f"gsm8k_result_{model_name}.csv"
     combined_df.to_csv(output_file, index=False)
     logger.info(f"Combined data written to {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process GSM8K dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process per subset and split. If not provided, process all samples.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

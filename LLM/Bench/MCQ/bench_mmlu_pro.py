@@ -79,8 +79,9 @@ def process_dataset(nsamples = None):
     logger.info(f"Combined DataFrame created with {len(combined_df)} total questions")
     
     # Write the combined DataFrame to a CSV file
-    combined_df.to_csv("mmlu_pro_result.csv", index=False)
-    logger.info("Combined DataFrame written to mmlu_pro_result.csv")
+    filename = f"mmlu_pro_result_{model_name}"
+    combined_df.to_csv(filename, index=False)
+    logger.info(f"DataFrame written to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process MMLU Pro dataset")

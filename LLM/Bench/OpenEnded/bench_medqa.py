@@ -13,7 +13,11 @@ logger = logging.getLogger(__name__)
 
 def load_data(split):
     model_name = "openlifescienceai/medqa"
-    ds = load_dataset(model_name)
+    try:
+        ds = load_dataset(model_name)
+    except Exception as e:
+        logger.error(f"Error loading dataset: {str(e)}")
+        return None
     return ds[split]
 
 def process_subset(llm, split, nsamples=None):
@@ -53,10 +57,10 @@ def process_subset(llm, split, nsamples=None):
     logger.info(f"Finished processing {split} dataset")
     return pd.DataFrame(results)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     splits = ["train", "test", "dev"]
     frames = []
-    llm = LLMChat("llama3.1")
+    llm = LLMChat(model_name)
 
     logger.info(f"Starting dataset processing with {nsamples if nsamples else 'all'} samples per split")
 
@@ -69,16 +73,17 @@ def process_dataset(nsamples=None):
     combined_df = pd.concat(frames, ignore_index=True)
 
     # Save combined DataFrame to CSV
-    output_file = "medqa_results.csv"
+    output_file = f"medqa_result_{model_name}.csv"
     combined_df.to_csv(output_file, index=False)
     logger.info(f"Saved all results to {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medqa dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
     logger.info(f"Starting script with nsamples={args.nsamples}")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
     logger.info("Script execution completed")
 

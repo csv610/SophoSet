@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-import random  # Add this import at the top of the file
+import random 
 import argparse
 
 from datasets import load_dataset
@@ -57,24 +57,28 @@ def process_subset(llm, split, nsamples=None):
     df = pd.DataFrame(results)
     return df
 
-def process_dataset(nsamples = None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Starting process: Dataset: ChatDoctor iCliniq")
 
-    llm = LLMChat("llama3.1")
+    llm = LLMChat(model_name)
     split = "train"
 
     df = process_subset(llm, split, nsamples)
-
+    if df is empty:
+        logger.error("The DataFrame is empty. No data to save.")
+        return
+    
     # Save the DataFrame to a CSV file
-    output_file = 'chatdoctor_icliniq_result.csv'
-    df.to_csv(output_file, index=False)
-    logger.info(f"Results saved to {output_file}")
+    filename = f'chatdoctor_icliniq_result_{model_name}.csv'
+    df.to_csv(filename, index=False)
+    logger.info(f"Results saved to {filename}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process ChatDoctor iCliniq dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process")
     args = parser.parse_args()
 
-    process_dataset(args.nsamples)
+    process_dataset(args.model_name, args.nsamples)
 

@@ -107,12 +107,10 @@ SUBSETS = [
 # List of splits
 SPLITS = ["train"]
 
-def process_dataset(nsamples: Optional[int] = None) -> None:
+def process_dataset(model_name: str, nsamples: Optional[int] = None) -> None:
     logger.info("Starting dataset processing: Big Bench Hard")
 
     frames = []
-
-    model_name = "llama3.1"
 
     llm = LLMChat(model_name)
     logger.info(f"Initialized LLMChat with model: {model_name}")
@@ -129,8 +127,9 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
     
     if frames:
         final_frame = pd.concat(frames, ignore_index=True)
-        final_frame.to_csv("bigbenchhard_result.csv", index=False)
-        logger.info(f"Data saved to bigbenchhard_result.csv. Total rows: {len(final_frame)}")
+        filename = f"bigbenchhard_result_{model_name}"
+        final_frame.to_csv(filename, index=False)
+        logger.info(f"Data saved to {filename}jjkk")
     else:
         logger.error("No data processed. Unable to create CSV file.")
 
@@ -138,5 +137,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process BigBenchHard dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, 
                         help="Number of random samples to process per subset and split. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", 
+                        help="Name of the model to use. Default is llama3.1.")
     args = parser.parse_args()
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

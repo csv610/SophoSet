@@ -59,8 +59,9 @@ def process_dataset(nsamples=None):
     df = process_subset(llm, "validation", nsamples)
 
     # Save the DataFrame to a CSV file
-    df.to_csv("winogrande_result.csv", index=False)
-    logger.info("DataFrame saved to winogrande_result.csv")
+    filename = f"winogrande_result_{model_name}"
+    df.to_csv(filename, index=False)
+    logger.info(f"DataFrame saved to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Winogrande dataset")

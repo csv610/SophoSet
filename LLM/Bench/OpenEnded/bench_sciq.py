@@ -43,10 +43,11 @@ def process_subset(llm, split, nsamples=None):
     
     return pd.DataFrame(data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     splits = ["train", "validation", "test"]
+    
     dataframes = []
-    llm = LLMChat("llama3.1")
+    llm = LLMChat(model_name)
 
     for split in splits:
         print(f"Processing split: {split}")
@@ -54,24 +55,30 @@ def process_dataset(nsamples=None):
         dataframes.append(df)
  
     combined_df = pd.concat(dataframes, ignore_index=True)
-    
+
+    # Check if combined DataFrame is empty
+    if combined_df.empty:
+        logging.warning("The combined DataFrame is empty. No data to write.")
+        return
+
     # Write the combined DataFrame to a CSV file
-    combined_df.to_csv("sciq_result.csv", index=False)
-    logging.info("Combined DataFrame written to sciq_result.csv")
+    filename = f"sciq_result_{model_name}.csv"  # Create filename with model name
+    combined_df.to_csv(filename, index=False)
+    logging.info(f"Combined DataFrame written to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process SCiQ dataset")
+    parser.add_argument("-m", "--model", type=str, default="llama3.1", required=True, help="Model name to use for processing.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
-    parser.add_argument("-l", "--log", type=str, default="INFO", help="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+    # Removed logging level argument
+    # Set default logging level
+    numeric_level = logging.INFO
     args = parser.parse_args()
 
     # Set up logging
-    numeric_level = getattr(logging, args.log.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {args.log}")
     logging.basicConfig(level=numeric_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
     logging.info(f"Starting process with {args.nsamples if args.nsamples else 'all'} samples")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model, nsamples=args.nsamples)
     logging.info("Process completed")
 

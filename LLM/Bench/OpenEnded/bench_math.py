@@ -54,10 +54,11 @@ def process_subset(llm, subset, split, nsamples=None):
     
     return pd.DataFrame(subset_data)
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     setup_logging()
     logging.info("Starting dataset processing")
-    llm = LLMChat("llama3.1")
+
+    llm = LLMChat(model_name)
     frames = []
 
     for subset in SUBSETS:
@@ -66,16 +67,22 @@ def process_dataset(nsamples=None):
             newframe = process_subset(llm, subset, split, nsamples)
             frames.append(newframe)
 
-    df = pd.concat(frames, ignore_index=True)
+    if frames:  # Check if frames is not empty
+        df = pd.concat(frames, ignore_index=True)
+    else:
+        logging.warning("No frames to concatenate. Returning empty DataFrame.")
+        return pd.DataFrame()  # Return an empty DataFrame if no frames
 
-    df.to_csv('math_dataset.csv', index=False)
+    filename = f'math_dataset_{model_name}.csv'
+    df.to_csv(filename, index=False)
     logging.info("Data saved to math_dataset.csv")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Math dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process per subset and split. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
     
     

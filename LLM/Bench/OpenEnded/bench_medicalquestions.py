@@ -57,19 +57,24 @@ def process_subset(llm, split='train', nsamples=None):
     df = pd.DataFrame(data)
     return df
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info(f"Processing Medical Questions dataset with {nsamples if nsamples else 'all'} samples")
-    llm = LLMChat("llama3.1")
+    
+    llm = LLMChat(model_name)
+
     df = process_subset(llm, nsamples=nsamples)
+
     if df is not None:
-        df.to_csv("medicalquestions_result.csv", index=False)
-        logger.info("Data saved to medicalquestions_result.csv")
+        filename = f"medicalquestions_result_{model_name}.csv"
+        df.to_csv(filename, index=False)
+        logger.info(f"Data saved to {filename}")
     else:
         logger.warning("No data to save")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medical Questions dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

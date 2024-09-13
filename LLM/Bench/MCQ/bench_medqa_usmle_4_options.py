@@ -11,7 +11,7 @@ from datasets import load_dataset
 # Constants
 MODEL_ID = "GBaker/MedQA-USMLE-4-options"
 SPLITS = ["train", "test"]
-OUTPUT_FILE = "medqa_usmle_4_option2_result.csv"
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -55,10 +55,11 @@ def process_subset(llm, split, nsamples=None):
         })
     return pd.DataFrame(data)
 
-def process_dataset(nsamples = None):
+def process_dataset(model_name, nsamples=None):
     dataframes = {}
-    model_name = "llama3.1"
-    llm = LLMChat(model_name)  # Assuming you have an LLMChat class defined
+    
+    llm = LLMChat(model_name)
+
     for split in SPLITS:
         df = process_subset(llm, split, nsamples)
         if df is not None:
@@ -70,9 +71,9 @@ def process_dataset(nsamples = None):
     if dataframes:
         # Combine all DataFrames
         combined_df = pd.concat(dataframes.values(), ignore_index=True)
-        
+        filename = f"medqa_usmle_4_option2_result_{model_name}.csv"
         # Write the combined DataFrame to a CSV file
-        combined_df.to_csv(OUTPUT_FILE, index=False)
+        combined_df.to_csv(filename, index=False)
         logger.info(f"Combined data written to {OUTPUT_FILE}")
         logger.info(f"Total questions: {len(combined_df)}")
     else:
@@ -81,14 +82,14 @@ def process_dataset(nsamples = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process MedQA USMLE-4 dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Name of the model to use.")
     args = parser.parse_args()
 
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
     logger.info(f"Starting script with {args.nsamples if args.nsamples else 'all'} samples")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
     logger.info("Script completed successfully")
 
 

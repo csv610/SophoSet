@@ -67,24 +67,24 @@ def process_subset(llm, split = "train", nsamples=None):
     logger.info(f"Processed {len(df)} questions for {split} split")
     return df
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     logger.info("Starting dataset processing: medical meadow medqa")
-
-    model_name = "llama3.1"
 
     llm = LLMChat(model_name)
     final_frame = process_subset(llm, nsamples=nsamples)
 
     if final_frame is not None:
         # Write the DataFrame to a CSV file
-        final_frame.to_csv("medical_meadow_medqa_result.csv", index=False)
-        logger.info("Results have been saved to medical_meadow_medqa_result.csv")
+        filename = f"medical_meadow_medqa_result_{model_name}.csv"
+        final_frame.to_csv(filename, index=False)
+        logger.info(f"Results have been saved to {filename}")
     else:
         logger.warning("No results to save. Check for errors in processing.")
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medical Meadow MedQA dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Model name to use for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)

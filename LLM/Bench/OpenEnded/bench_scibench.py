@@ -20,13 +20,13 @@ def load_data(split='train'):
         logger.error(f"Error loading dataset: {e}")
         return None
 
-def process_dataset(nsamples=None):
+def process_dataset(model_name, nsamples=None):
     dataset = load_data()
     if dataset is None:
         return
 
     data = []
-    llm = LLMChat("llama3.1")
+    llm = LLMChat(model_name)
     logger.info(f"Processing dataset with {'all' if nsamples is None else nsamples} samples")
 
     if nsamples is not None and nsamples < len(dataset):
@@ -53,14 +53,20 @@ def process_dataset(nsamples=None):
         })
 
     df = pd.DataFrame(data)
-    df.to_csv('scibench_dataset.csv', index=False)
+    if df.empty:
+        logger.warning("No data to save, DataFrame is empty.")
+        return
+
+    filename = f'scibench_result_{model_name}.csv'  # Create filename
+    df.to_csv(filename, index=False)
     logger.info("Dataset saved to scibench_dataset.csv")
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process MMLU dataset")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", required=True, help="Name of the model to use.")
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     args = parser.parse_args()
 
     logger.info(f"Starting script with {args.nsamples if args.nsamples else 'all'} samples")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(model_name=args.model_name, nsamples=args.nsamples)
     logger.info("Script completed")

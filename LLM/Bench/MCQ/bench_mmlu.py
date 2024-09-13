@@ -119,8 +119,9 @@ def process_dataset(nsamples=None):
     logging.info(f"Final dataset shape: {final_df.shape}")
     
     # Save the final dataframe to a CSV file
-    final_df.to_csv("mmlu_result.csv", index=False)
-    logging.info("Saved results to mmlu_result.csv")
+    filename = f"mmlu_result_{model_name}"
+    final_df.to_csv(filename, index=False)
+    logging.info(f"Saved results to {filename}")
 
 if __name__ == "__main__":
     # Set up logging

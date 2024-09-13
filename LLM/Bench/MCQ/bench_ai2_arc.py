@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 import random
 import argparse
+import os
 
 from tqdm import tqdm
 from llm_chat import LLMChat
@@ -55,7 +56,7 @@ def process_subset(llm: LLMChat, subset: str, split: str, nsamples: Optional[int
     logger.info(f"Successfully processed {len(data)} rows for {subset} - {split}")
     return pd.DataFrame(data)
 
-def process_dataset(nsamples: Optional[int] = None) -> None:
+def process_dataset(nsamples: Optional[int] = None, model_name: str = None) -> None:
     logger.info("Starting AI2 ARC dataset processing")
 
     subsets = ["ARC-Challenge", "ARC-Easy"]
@@ -63,7 +64,8 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
 
     frames = []
 
-    model_name = "llama3.1"
+    if model_name is None:
+        model_name = "llama3.1"
 
     llm = LLMChat(model_name, temperature=0.0)
     logger.info(f"Initialized LLMChat with model: {model_name}")
@@ -81,15 +83,21 @@ def process_dataset(nsamples: Optional[int] = None) -> None:
     final_df = pd.concat(frames, ignore_index=True)
     logger.info(f"Combined all DataFrames. Total rows: {len(final_df)}")
     
+    # Ensure results directory exists; create it if it does not
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
     # Write to CSV
-    csv_filename = 'ai2_arc_results.csv'
-    final_df.to_csv(csv_filename, index=False)
-    logger.info(f"All data written to {csv_filename}")
+    filename = f'results/ai2_arc_results_{model_name}.csv'
+    final_df.to_csv(filename, index=False)
+    logger.info(f"All data written to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process AI2 ARC dataset")
     parser.add_argument("-n", "--nsamples", type=int, default=None, 
                         help="Number of random samples to process per subset and split. If not provided, process all samples.")
+    parser.add_argument("-m", "--model_name", type=str, default="llama3.1", 
+                        help="Name of the model to use for processing.")
     args = parser.parse_args()
 
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(nsamples=args.nsamples, model_name=args.model_name)

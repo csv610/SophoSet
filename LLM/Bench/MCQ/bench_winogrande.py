@@ -63,7 +63,7 @@ def process_dataset(nsamples=None):
         os.makedirs('results')
 
     # Save the DataFrame to a CSV file
-    filename = f"results/winogrande_result_{model_name}"
+    filename = f"results/winogrande_result_{model_name}.csv"
     df.to_csv(filename, index=False)
     logger.info(f"DataFrame saved to {filename}")
 

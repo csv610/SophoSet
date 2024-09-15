@@ -119,7 +119,7 @@ def process_dataset(nsamples=None):
     logging.info(f"Final dataset shape: {final_df.shape}")
     
     # Save the final dataframe to a CSV file
-    filename = f"results/mmlu_result_{model_name}"
+    filename = f"results/mmlu_result_{model_name}.csv"
     final_df.to_csv(filename, index=False)
     logging.info(f"Saved results to {filename}")
 

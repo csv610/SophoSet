@@ -83,7 +83,7 @@ def process_dataset(nsamples = None):
         os.makedirs('results')
 
     # Write the combined DataFrame to a CSV file
-    filename = f"results/mmlu_pro_result_{model_name}"
+    filename = f"results/mmlu_pro_result_{model_name}.csv"
     combined_df.to_csv(filename, index=False)
     logger.info(f"DataFrame written to {filename}")
 

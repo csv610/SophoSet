@@ -75,10 +75,10 @@ def process_dataset(model_name, nsamples=None):
     if dataframes:
         # Combine all DataFrames
         combined_df = pd.concat(dataframes.values(), ignore_index=True)
-        filename = f"medqa_usmle_4_option2_result_{model_name}.csv"
+        filename = f"results/medqa_usmle_4_option2_result_{model_name}.csv"
         # Write the combined DataFrame to a CSV file
         combined_df.to_csv(filename, index=False)
-        logger.info(f"Combined data written to {OUTPUT_FILE}")
+        logger.info(f"Combined data written to {filename}")
         logger.info(f"Total questions: {len(combined_df)}")
     else:
         logger.error("No data was loaded. Unable to create output file.")
@@ -88,9 +88,6 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
     parser.add_argument("-m", "--model_name", type=str, default="llama3.1", help="Name of the model to use.")
     args = parser.parse_args()
-
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
 
     logger.info(f"Starting script with {args.nsamples if args.nsamples else 'all'} samples")
     process_dataset(model_name=args.model_name, nsamples=args.nsamples)

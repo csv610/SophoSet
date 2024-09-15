@@ -1,15 +1,15 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
 import time
+import re
 
 class LLMChat:
     def __init__(self, model_name, temperature = 0.5):
         self.model = OllamaLLM(model=model_name, temperature = temperature)
         self.mcq_prompt_template = """
             Question: {question}
-            Choices:  {choices}
-
-            Answer: Let's carefully consider the subject matter and each of the provided choices before determining the most accurate answer. Your response must include the final answer first and then the explanation.
+            Choices:  {choices} 
+            Answer: Let's carefully consider the subject matter and each of the provided choices before determining the most accurate answer. Your response must contain the label and explation.
         """
         self.explain_prompt_template = ChatPromptTemplate.from_template("""
             Question: {question}
@@ -25,6 +25,28 @@ class LLMChat:
         """Counts the number of words in a sentence."""
         words = sentence.split()
         return len(words)
+    
+    def extract_label_and_explanation(text, num_options):
+        # Generate valid labels based on the number of options (e.g., ['A', 'B', 'C', ...])
+        valid_labels = [chr(65 + i) for i in range(num_options)]
+
+        # Regular expressions to capture the answer label and explanation
+        label_pattern = r"\*\*Answer:\*\* \((.*?)\)"
+        explanation_pattern = r"\*\*Explanation:\*\* (.+)"
+
+        # Extract the label and explanation
+        label_match = re.search(label_pattern, text)
+        explanation_match = re.search(explanation_pattern, text)
+
+        # Extracted values
+        label = label_match.group(1) if label_match else None
+        explanation = explanation_match.group(1) if explanation_match else None
+
+        # Check if the label is valid
+        if label not in valid_labels:
+            raise ValueError(f"Invalid label '{label}'. It should be one of {valid_labels}.")
+
+        return label, explanation
 
     def get_answer(self, question, choices=None, cot_prompt=False):
         """Returns an answer. If choices are provided, it handles multiple choice; otherwise, it handles open-ended questions."""
@@ -33,7 +55,7 @@ class LLMChat:
 
         # If choices are provided, handle as an MCQ
         if choices:
-            choices_str = "\n".join([f"{chr(65 + i)}) {choice}" for i, choice in enumerate(choices)])
+            choices_str = "\n" + "\n".join([f"({chr(65 + i)}) {choice}" for i, choice in enumerate(choices)])
             num_input_words += sum(self.count_words(choice) for choice in choices)
             
             # Create the prompt with choices
@@ -48,7 +70,6 @@ class LLMChat:
             else:
                 prompt = self.default_prompt_template.format(question=question)
 
-        # Measure response time
         t0 = time.time()
         response = (ChatPromptTemplate.from_template(prompt) | self.model).invoke({})
         t1 = time.time()
@@ -58,9 +79,7 @@ class LLMChat:
         
         # If it's an MCQ, extract the answer letter
         if choices:
-            answer_line = response.split("\n", 1)[0].strip()  # Get the first line
-            answer = answer_line[0]  # Extract only the first character (A, B, C, etc.)
-            explanation = response.split("\n", 1)[1] if "\n" in response else ""
+            answer, explanation = self.extract_label_and_explanation(str(response), len(choices))
         else:
             # For non-MCQ, the answer is the full response
             answer = response

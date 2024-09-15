@@ -1,2 +1,4 @@
 sophoenv/
 images/
+*.csv
+__pycache__

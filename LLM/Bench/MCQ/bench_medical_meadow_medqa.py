@@ -1,4 +1,5 @@
 import re
+import os
 import ast
 import random
 import logging
@@ -73,9 +74,12 @@ def process_dataset(model_name, nsamples=None):
     llm = LLMChat(model_name)
     final_frame = process_subset(llm, nsamples=nsamples)
 
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
     if final_frame is not None:
         # Write the DataFrame to a CSV file
-        filename = f"medical_meadow_medqa_result_{model_name}.csv"
+        filename = f"results/medical_meadow_medqa_result_{model_name}.csv"
         final_frame.to_csv(filename, index=False)
         logger.info(f"Results have been saved to {filename}")
     else:

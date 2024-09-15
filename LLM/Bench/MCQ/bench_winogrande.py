@@ -2,6 +2,7 @@ import pandas as pd
 import argparse
 import random
 import logging
+import os
 
 from datasets import load_dataset
 from llm_chat import LLMChat
@@ -58,8 +59,11 @@ def process_dataset(nsamples=None):
     llm = LLMChat(model_name)
     df = process_subset(llm, "validation", nsamples)
 
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
     # Save the DataFrame to a CSV file
-    filename = f"winogrande_result_{model_name}"
+    filename = f"results/winogrande_result_{model_name}"
     df.to_csv(filename, index=False)
     logger.info(f"DataFrame saved to {filename}")
 

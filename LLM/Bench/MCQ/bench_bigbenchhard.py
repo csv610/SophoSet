@@ -124,10 +124,13 @@ def process_dataset(model_name: str, nsamples: Optional[int] = None) -> None:
                 logger.info(f"Successfully processed {subset} - {split}")
             else:
                 logger.warning(f"Failed to process {subset} - {split}")
-    
+
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
     if frames:
         final_frame = pd.concat(frames, ignore_index=True)
-        filename = f"bigbenchhard_result_{model_name}"
+        filename = f"results/bigbenchhard_result_{model_name}"
         final_frame.to_csv(filename, index=False)
         logger.info(f"Data saved to {filename}jjkk")
     else:

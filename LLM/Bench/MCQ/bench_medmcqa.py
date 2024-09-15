@@ -1,3 +1,4 @@
+import os
 import logging
 import random
 import argparse
@@ -51,8 +52,11 @@ def process_dataset(model_name, nsamples=None):
     llm = LLMChat(model_name)
 
     df = process_subset(llm, nsamples=nsamples)
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
     if df is not None:
-        filename = f"medmcqa_result_{model_name}.csv"
+        filename = f"results/medmcqa_result_{model_name}.csv"
         df.to_csv(filename, index=False)
         logging.info(f"Results saved to {filename}")
 

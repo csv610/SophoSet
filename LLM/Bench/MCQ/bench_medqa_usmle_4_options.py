@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import logging
 import random
@@ -67,6 +68,9 @@ def process_dataset(model_name, nsamples=None):
             logger.info(f"Loaded {len(df)} questions from {split} split")
         else:
             logger.warning(f"Failed to load data for {split} split")
+
+    if not os.path.exists('results'):
+        os.makedirs('results')    
 
     if dataframes:
         # Combine all DataFrames

@@ -110,7 +110,7 @@ def main():
                 start_time = time.time()  # Start the timer
                 try:
                     print(prompt)
-                    answer = vlm.get_answer(image, prompt)  # Pass the byte stream
+                    answer = vlm.get_answer(prompt, image)  # Pass the byte stream
                     elapsed_time = time.time() - start_time  # Calculate elapsed time
                     st.write(f"Model answer: {answer}")
                     st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time

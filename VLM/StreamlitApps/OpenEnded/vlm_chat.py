@@ -47,13 +47,17 @@ class LlavaChat:
             except Exception as e:
                 raise ValueError(f"Unsupported image input type: {type(image_input)}. Error: {str(e)}")
 
-    def get_answer(self, image_input, question: str) -> str:
+    def get_answer(self, question: str, image = None) -> str:
         if not self.llm:
             self._initialize()
         
         try:
-            image_b64 = self._process_image_input(image_input)
-            return self.llm.invoke(question, images=[image_b64])
+            if image:
+                image_b64 = self._process_image_input(image)
+                response = self.llm.invoke(question, images=[image_b64])
+            else:
+                response = self.llm.invoke(question, images=[])
+            return response
         except Exception as e:
             raise RuntimeError(f"Error during image analysis: {str(e)}")
 

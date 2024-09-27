@@ -2,7 +2,7 @@ import streamlit as st
 from datasets import load_dataset
 
 from vlm_chat import LlavaChat
-import time  # Ensure to import time at the top of the file
+import time 
 
 st.set_page_config(layout="wide")
 
@@ -127,7 +127,7 @@ def explore_data():
                 start_time = time.time()  # Start the timer
                 try:
                     print(prompt)
-                    answer = vlm.get_answer(image, prompt)  
+                    answer = vlm.get_answer(prompt, image)  
                     elapsed_time = time.time() - start_time 
                     st.write(f"Model answer: {answer}")
                     st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time

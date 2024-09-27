@@ -3,6 +3,8 @@ from datasets import load_dataset
 from PIL import Image
 import requests
 from io import BytesIO
+from vlm_chat import LlavaChat
+import time 
 
 # Load the dataset
 @st.cache_data()
@@ -15,15 +17,24 @@ def load_image_from_url(image_url):
     response = requests.get(image_url)
     return Image.open(BytesIO(response.content))
 
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
 # Streamlit app
 def main():
-    st.title("VisIT-Bench Dataset")
-
     # Load dataset
     dataset = load_data()
 
     # Sidebar for navigation
-    st.sidebar.title("Navigation")
+    st.sidebar.title("VisIT-Bench")
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -48,9 +59,36 @@ def main():
         question = row['instruction']
         st.write(question)
 
+        image = None
         if row['image'] is not None:
             image = row['image']
             st.image(image, caption=f"Item {start_index + i + 1}", use_column_width=True)
+
+        # Convert image to bytes if it exists
+        if image:
+            from io import BytesIO
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        # Use a button to trigger the answer retrieval
+        if st.button(f"Ask VLM : {i + 1}"):
+            vlm = load_vlm_model()
+            prompt = build_prompt(question)
+
+            st.session_state.processing = True  # Set processing state
+            with st.spinner("Retrieving answer..."):
+                start_time = time.time()  # Start the timer
+                try:
+                    answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                    elapsed_time = time.time() - start_time  # Calculate elapsed time
+                    st.write(f"Model answer: {answer}")
+                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+                except Exception as e:
+                    st.error(f"Error retrieving answer: {str(e)}")
+                finally:
+                    st.session_state.processing = False  # Reset processing state
 
         st.divider()
 

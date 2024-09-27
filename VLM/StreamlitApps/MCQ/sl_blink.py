@@ -29,11 +29,8 @@ def load_data(subset, split):
 
 # Streamlit app
 def main():
-    st.title("Dataset: BLINK")
-    st.divider()
-
     # Sidebar for navigation
-    st.sidebar.title("Navigation")
+    st.sidebar.title("BLINK")
 
     # Subset selection
     subset = st.sidebar.selectbox("Select Subset", SUBSETS)

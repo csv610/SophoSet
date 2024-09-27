@@ -3,6 +3,8 @@ from datasets import load_dataset
 from PIL import Image
 import requests
 from io import BytesIO
+from vlm_chat import LlavaChat
+import time 
 
 st.set_page_config(layout="wide")
 
@@ -17,13 +19,21 @@ def load_image(image_url):
     response = requests.get(image_url)
     return Image.open(BytesIO(response.content))
 
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expoert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
 # Streamlit app
 def main():
-    st.title("Dataset: OlympicArena")
-    st.divider()
-
     # Sidebar for subject selection
-    st.sidebar.title("Navigation")
+    st.sidebar.title("OlympicArena")
     subject = st.sidebar.selectbox(
         "Select Subject",
         options=["Astronomy", "Biology", "CS", "Chemistry", "Geography", "Math", "Physics"]
@@ -55,9 +65,11 @@ def main():
         st.header(f"Question: {i + 1}")
 
         # Display instruction
-        st.write(row['problem'])
+        question = row['problem']
+        st.write(question)
 
         # Display images
+        image = None
         if row['figure_urls']:
             for url in row['figure_urls']:
                 try:
@@ -65,6 +77,33 @@ def main():
                     st.image(image, caption=f"Item {start_index + i + 1}", use_column_width=True)
                 except Exception as e:
                     st.write(f"Unable to load image from {url}: {e}")
+
+        if image:
+            from io import BytesIO
+            img_byte_arr = BytesIO()
+            # Convert image to RGB mode if it is in RGBA
+            if image.mode == 'RGBA':
+                image = image.convert('RGB')
+            image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        # Use a button to trigger the answer retrieval
+        if st.button(f"Ask VLM : {i+1}"):
+            vlm = load_vlm_model()
+            prompt = build_prompt(question)
+            st.session_state.processing = True  # Set processing state
+            with st.spinner("Retrieving answer..."):
+                start_time = time.time()  # Start the timer
+                try:  # Fixed indentation
+                    answer = vlm.get_answer(prompt, image)  
+                    elapsed_time = time.time() - start_time 
+                    st.write(f"Model answer: {answer}")
+                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+                except Exception as e:
+                    st.error(f"Error retrieving answer: {str(e)}")
+                finally:
+                    st.session_state.processing = False  # Reset processing state
 
         st.divider()
 

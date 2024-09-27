@@ -107,7 +107,7 @@ def display_question(index: int, row: dict):
             start_time = time.time()  # Start the timer
             try:  # Fixed indentation
                 print(prompt)
-                answer = vlm.get_answer(image, prompt)  
+                answer = vlm.get_answer(prompt, image)  
                 elapsed_time = time.time() - start_time 
                 st.write(f"Model answer: {answer}")
                 st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time

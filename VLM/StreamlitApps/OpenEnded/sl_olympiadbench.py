@@ -1,5 +1,7 @@
 import streamlit as st
 from datasets import load_dataset
+from vlm_chat import LlavaChat
+import time 
 
 st.set_page_config(layout="wide")
 
@@ -10,13 +12,22 @@ def load_data(split):
     ds = ds[split]
     return ds
 
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
 # Streamlit app
 def main():
-    st.title("Dataset: OlympicArena")
-    st.divider()
-
+    
     # Sidebar for subject selection
-    st.sidebar.title("Navigation")
+    st.sidebar.title("OlympiadBench")
     # Split selection
     split = st.sidebar.selectbox("Select Split", ["test_en", "test_cn"])
 
@@ -43,6 +54,7 @@ def main():
         st.header(f"Question: {i + 1}")
 
         # Display instruction
+        question = row['question']
         st.write(row['question'])
 
         # Display images
@@ -52,6 +64,25 @@ def main():
                     st.image(image, caption=f"Item {i + 1}", width=500)
                 except Exception as e:
                     st.write(f"Unable to load image from {url}: {e}")
+
+        vlm = load_vlm_model()
+        prompt = build_prompt(question)
+
+        # Use a button to trigger the answer retrieval
+        if st.button(f"Ask VLM : {i+1}"):
+            st.session_state.processing = True  # Set processing state
+            with st.spinner("Retrieving answer..."):
+                start_time = time.time()  # Start the timer
+                try:  # Fixed indentation
+                    print(prompt)  # Indented this line
+                    answer = vlm.get_answer(prompt, image)  
+                    elapsed_time = time.time() - start_time 
+                    st.write(f"Model answer: {answer}")
+                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+                except Exception as e:
+                    st.error(f"Error retrieving answer: {str(e)}")
+                finally:
+                    st.session_state.processing = False  # Reset processing state
 
         st.divider()
 

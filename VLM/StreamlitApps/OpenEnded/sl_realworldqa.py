@@ -2,6 +2,8 @@ import streamlit as st
 from datasets import load_dataset
 import re
 from typing import Tuple, List, Optional
+from vlm_chat import LlavaChat
+import time 
 
 st.set_page_config(layout="wide")
 
@@ -14,10 +16,21 @@ def load_data(split: str = "test"):
     except Exception as e:
         st.error(f"Error loading dataset: {e}")
         return None
+    
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options):
+    if not options:  # Check if options are empty
+        prompt = f"You are an intelligent assistant. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an intellgent assistant. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
 
 def config_panel() -> Tuple[Optional[dict], int, int]:
     """Handle the contents of the left panel (sidebar)."""
-    st.sidebar.title("Navigation")
+    st.sidebar.title("RealworldQA")
 
     # Load dataset
     dataset = load_data()
@@ -58,9 +71,24 @@ def display_question(index: int, row: dict):
     st.header(f"Question: {index}")
 
     question, options = split_text(row['question'])
-    
+
     st.write(question)
-    st.image(row['image'], caption=f"Question {index}")
+
+    image = None
+    if row['image']:
+        image = row['image']
+        st.image(image, caption=f"Qs:{index}")
+                
+    # Convert image to bytes if it exists
+    if image:
+        from io import BytesIO
+        img_byte_arr = BytesIO()
+        # Convert image to RGB mode if it is in RGBA
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
+        img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+        image = img_byte_arr  # Update image to byte stream
     
     if options:
         for option in options:
@@ -68,12 +96,30 @@ def display_question(index: int, row: dict):
     
     with st.expander("Show Answer"):
         st.write(f"Answer: {row['answer']}")
+    
+    vlm = load_vlm_model()
+    prompt = build_prompt(question, options)
+
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:  # Fixed indentation
+                print(prompt)
+                answer = vlm.get_answer(image, prompt)  
+                elapsed_time = time.time() - start_time 
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
 
     st.divider()
 
 def view_dataset():
-    """Main function to display the dataset viewer."""
-    st.title("RealWorld Dataset")
+
 
     dataset, num_items_per_page, selected_page = config_panel()
 

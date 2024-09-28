@@ -5,6 +5,8 @@ import requests
 from io import BytesIO
 from vlm_chat import LlavaChat
 import time 
+from langdetect import detect, DetectorFactory
+DetectorFactory.seed = 0  # For consistent results
 
 st.set_page_config(layout="wide")
 
@@ -93,7 +95,17 @@ def main():
 
         # Display instruction
         question = row['problem']
+
         st.write(question)
+        
+        # Detect the language of the question
+        try:
+            language = detect(question)            
+            if language != 'en':
+                st.write(f"Detected language: {language}")
+               
+        except Exception as e:
+            st.error(f"Error detecting language: {str(e)}")
 
         # Display images
         image = None

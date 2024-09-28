@@ -30,7 +30,6 @@ def ask_vlm(question, options, image, index):
 
         # Convert image to bytes if it exists
         if image:
-            
             img_byte_arr = BytesIO()
             image.save(img_byte_arr, format='JPEG')  # Save as JPEG
             img_byte_arr.seek(0)  # Move to the beginning of the byte stream

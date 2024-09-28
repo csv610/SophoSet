@@ -1,6 +1,9 @@
 import streamlit as st
 from datasets import load_dataset
 import re
+from vlm_chat import LlavaChat
+from io import BytesIO
+import time 
 
 st.set_page_config(layout="wide")
 
@@ -36,10 +39,10 @@ def config_panel():
     Returns:
         tuple: Contains the loaded dataset, number of items per page, and the selected page number.
     """
-    st.sidebar.title("Navigation")
+    st.sidebar.title("MMMU")
 
     # Subset selection
-    subset = st.sidebar.selectbox("Select Subset", [ "Accounting", "Agriculture", "Architecture_and_Engineering", "Art", "Art_Theory", "Basic_Medical_Science", "Biology", "Chemistry", "Clinical_Medicine", "Computer_Science", "Design", "Diagnostics_and_Laboratory_Medicine", "Economics", "Electronics", "Energy_and_Power", "Finance", "Geography", "History", "Literature", "Manage", "Marketing", "Materials", "Math", "Mechanical_Engineering", "Music", "Pharmacy", "Physics", "Psychology", "Public_Health", "Sociology" ])
+    subset = st.sidebar.selectbox("Select Subset", ["Accounting", "Agriculture", "Architecture_and_Engineering", "Art", "Art_Theory", "Basic_Medical_Science", "Biology", "Chemistry", "Clinical_Medicine", "Computer_Science", "Design", "Diagnostics_and_Laboratory_Medicine", "Economics", "Electronics", "Energy_and_Power", "Finance", "Geography", "History", "Literature", "Manage", "Marketing", "Materials", "Math", "Mechanical_Engineering", "Music", "Pharmacy", "Physics", "Psychology", "Public_Health", "Sociology"])
 
     # Split selection
     split = st.sidebar.selectbox("Select Split", ["test", "validation", "dev"])
@@ -60,45 +63,63 @@ def config_panel():
 
     return dataset, num_items_per_page, selected_page
 
-def process_latex(text):
-    """
-    Processes a string or a list of strings to escape dollar signs used for currency
-    while preserving dollar signs used for LaTeX expressions.
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
 
-    Args:
-        text (str or list): The input string or list of strings containing both LaTeX expressions
-                            and currency values.
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
 
-    Returns:
-        str or list: The processed string or list of strings with appropriate escaping.
-    """
-    if isinstance(text, list):
-        # If the input is a list, process each item individually
-        return [process_text(item) for item in text]
+def ask_vlm(question, options, image, index):
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
 
-    # Identify LaTeX expressions in the text using regular expression
-    latex_parts = re.findall(r'\$[^$]+\$', text)
+        # Convert image to bytes if it exists
+        if image:   
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
 
-    # Temporarily replace LaTeX parts with placeholders
-    for i, part in enumerate(latex_parts):
-        placeholder = f"__LATEX_{i}__"
-        text = text.replace(part, placeholder)
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
 
-    # Escape all remaining dollar signs (these are the non-LaTeX parts)
-    text = text.replace('$', r'\$')
+def parse_options(options_str):
+    # Remove the outer square brackets
+    options_str = options_str.strip('[]')
+    
+    # Split the string by commas, but not within quotes
+    pattern = r',\s*(?=[\'"])'
+    options = re.split(pattern, options_str)
+    
+    # Clean up each option
+    cleaned_options = []
+    for option in options:
+        # Remove surrounding quotes and whitespace
+        cleaned = option.strip().strip('\'"')
+        # Ensure dollar signs are preserved
+        if cleaned.startswith('$'):
+            cleaned = '$' + cleaned.lstrip('$')
+        cleaned_options.append(cleaned)
+    
+    return cleaned_options
 
-    # Restore the LaTeX expressions by replacing placeholders with original parts
-    for i, part in enumerate(latex_parts):
-        text = text.replace(f"__LATEX_{i}__", part)
-
-    return text
-
-
-# Streamlit app
 def view_dataset():
-    st.title("Dataset: MMMU")
-    st.divider()
-
     # Get sidebar selections
     dataset, num_items_per_page, selected_page = config_panel()
 
@@ -108,30 +129,40 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
+        print(row)
         st.header(f"Question: {i + 1}")
 
         # Display question 
-        question  = row['question']
+        question = row['question']
         st.write(question)
         st.write("")  # Add vertical space
 
-        for j in range(1,8):
+        images = []
+        for j in range(1, 8):
             image_key = f"image_{j}"
             if row[image_key] is not None:
                image = row[image_key]
+               images.append(image)
                st.image(image, caption = f"Qs: {i} Image{j}")
         st.write("")  # Add vertical space
 
-         # Display  choices
-        choices = row['options']
-        st.write(choices)
-        st.write("")  # Add vertical space
+        # Parse the options
+        options_str = row['options']
+        options = parse_options(options_str)
 
-        if st.button(f"Human Answer: {i + 1}"):
+        st.write("Options:")
+        for idx, option in enumerate(options):
+            st.write(f"({chr(65 + idx)}) {option}")
+
+        if st.button(f"Correct Answer: {i + 1}"):
+            print(row['answer'])
             st.write(row['answer'])
             st.write("")  # Add vertical space
+
+        ask_vlm(question, options, images, i+1)
 
         st.divider()
 
 if __name__ == "__main__":
     view_dataset()
+

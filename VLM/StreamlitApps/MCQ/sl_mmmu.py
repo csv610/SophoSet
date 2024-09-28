@@ -129,7 +129,6 @@ def view_dataset():
 
     for i in range(start_index, end_index):
         row = dataset[i]
-        print(row)
         st.header(f"Question: {i + 1}")
 
         # Display question 
@@ -155,7 +154,6 @@ def view_dataset():
             st.write(f"({chr(65 + idx)}) {option}")
 
         if st.button(f"Correct Answer: {i + 1}"):
-            print(row['answer'])
             st.write(row['answer'])
             st.write("")  # Add vertical space
 

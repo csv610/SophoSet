@@ -2,6 +2,7 @@ import streamlit as st
 from datasets import load_dataset
 
 from vlm_chat import LlavaChat
+from io import BytesIO
 import time 
 
 st.set_page_config(layout="wide")
@@ -29,16 +30,6 @@ def load_data(split):
        st.error(f"Error loading dataset: {str(e)}")
        return None
     
-def load_vlm_model():
-    vlm = LlavaChat()
-    return vlm
-
-def build_prompt(question, options=None):
-    if not options:  # Check if options are empty
-        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
-    else:
-        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
-    return prompt
 
 def config_panel():
     """
@@ -68,6 +59,17 @@ def config_panel():
 
     return dataset, num_items_per_page, selected_page
 
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
 def ask_vlm(question, options, image, index):
     if st.button(f"Ask VLM : {index}"):
         vlm = load_vlm_model()
@@ -75,7 +77,7 @@ def ask_vlm(question, options, image, index):
 
         # Convert image to bytes if it exists
         if image:
-            from io import BytesIO
+            
             img_byte_arr = BytesIO()
             image.save(img_byte_arr, format='JPEG')  # Save as JPEG
             img_byte_arr.seek(0)  # Move to the beginning of the byte stream

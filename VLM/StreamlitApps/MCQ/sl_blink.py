@@ -2,6 +2,10 @@ import streamlit as st
 from datasets import load_dataset
 import string
 
+from vlm_chat import LlavaChat
+from io import BytesIO
+import time 
+
 st.set_page_config(layout="wide")
 
 # Define subsets
@@ -26,6 +30,42 @@ def load_data(subset, split):
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
         return None
+    
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are a helpful assistant. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are a helpful assistant. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
+def ask_vlm(question, options, image, index):
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
+        # Convert image to bytes if it exists
+        if image:
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
 
 # Streamlit app
 def main():
@@ -60,24 +100,28 @@ def main():
         st.header(f"Question {i + 1}")
 
         # Display question
-        st.write(row['question'])
+        question = row['question']
+        st.write(question)
 
         # Display images
+        images = []
         for j in range(1, 5):
             image_key = f'image_{j}'
             if row[image_key] is not None:
-                st.image(row[image_key], caption=f"Image {j}", width = 500)
+                image = row[image_key]
+                images.append(image)
+                st.image(image, caption=f"Image {j}", width = 500)
 
+        options = NotImplementedError
         if row['choices'] is not None:
-            choice_labels = list(string.ascii_uppercase)[:len(row['choices'])]
-            formatted_choices = [f"({label}) {choice}" for label, choice in zip(choice_labels, row['choices'])]
-        
-            st.write("**Choices:**")
-            for choice in formatted_choices:
-                st.write(choice)
-
-        if st.button(f"Human Answer: {i + 1}"):
+            options = row['choices']
+            for idx, option in enumerate(options):
+                st.write(f"({chr(65 + idx)}) {option}")  # chr(65) is 'A'
+    
+        if st.button(f"Correct Answer: {i + 1}"):
             st.write(row['answer'])
+
+        ask_vlm(question, options, images, i+1)
 
         st.divider()
 

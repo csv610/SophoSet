@@ -1,7 +1,9 @@
 import streamlit as st
 from datasets import load_dataset
+
 from vlm_chat import LlavaChat
 import time 
+from io import BytesIO
 
 st.set_page_config(layout="wide")
 
@@ -22,6 +24,32 @@ def build_prompt(question, options=None):
     else:
         prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
+
+def ask_vlm(question, options, image, index):
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
+# Convert image to bytes if it exists
+        if image:
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # R
 
 # Streamlit app
 def main():
@@ -57,32 +85,16 @@ def main():
         question = row['question']
         st.write(row['question'])
 
-        # Display images
+        images = []
         if row['images']:
             for image in row['images']:
                 try:
+                    images.append(image)
                     st.image(image, caption=f"Item {i + 1}", width=500)
                 except Exception as e:
                     st.write(f"Unable to load image from {url}: {e}")
 
-        vlm = load_vlm_model()
-        prompt = build_prompt(question)
-
-        # Use a button to trigger the answer retrieval
-        if st.button(f"Ask VLM : {i+1}"):
-            st.session_state.processing = True  # Set processing state
-            with st.spinner("Retrieving answer..."):
-                start_time = time.time()  # Start the timer
-                try:  # Fixed indentation
-                    print(prompt)  # Indented this line
-                    answer = vlm.get_answer(prompt, image)  
-                    elapsed_time = time.time() - start_time 
-                    st.write(f"Model answer: {answer}")
-                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
-                except Exception as e:
-                    st.error(f"Error retrieving answer: {str(e)}")
-                finally:
-                    st.session_state.processing = False  # Reset processing state
+        ask_vlm(question, None, images, i+1)
 
         st.divider()
 

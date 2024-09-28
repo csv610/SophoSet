@@ -1,9 +1,11 @@
-
 import os
 import streamlit as st
 
 from PIL import Image
 from datasets import load_dataset
+
+from vlm_chat import LlavaChat
+import time  # Ensure
 
 st.set_page_config(layout="wide")
 
@@ -23,6 +25,12 @@ def load_data(split):
 # Function to load image from a file
 def load_image_from_file(image_filename, image_folder="./images/mathv360k_images"):
     image_path = os.path.join(image_folder, image_filename)
+    
+    # Check if the image path exists
+    if not os.path.exists(image_path):
+        st.error(f"Image not found: {image_path}")
+        return None  # Return None if the image does not exist
+    
     return Image.open(image_path)
 
 # Function to display conversation with hint, question, and choices on separate lines
@@ -41,11 +49,54 @@ def display_conversation(conversation_list):
         elif speaker == "gpt":
             st.write(f"**GPT:** {message}")
 
+def load_vlm_model():
+    vlm = LlavaChat()
+    return vlm
+
+def build_prompt(question, options=None):
+    if not options:  # Check if options are empty
+        prompt = f"You are an expert in mathematics. You are given an open-ended question: '{question}'. Provide a detailed answer."
+    else:
+        prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
+    return prompt
+
+def ask_vlm(question, options, image, index):
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
+    
+def extract_question_answer(conversation_list):
+    question = None
+    answer = None
+    
+    for entry in conversation_list:
+        if entry["from"] == "human":
+            # Extract question from the human's message
+            if "Question:" in entry["value"]:
+                question = entry["value"].split("Question:")[-1].strip()
+        
+        elif entry["from"] == "gpt":
+            # Extract answer from the GPT's message
+            answer = entry["value"].strip()
+    
+    return question, answer
+
 # Streamlit app
 def main():
-    st.title("Dataset: MathV360K")
-    st.divider()
-
     # Load dataset
     split   = 'train'
     dataset = load_data(split)
@@ -54,8 +105,11 @@ def main():
         st.stop()  # Stop execution if dataset loading failed
 
     # Sidebar for navigation
-    st.sidebar.title("Navigation")
+    st.sidebar.title("MathV360K")
 
+    # Ask for image folder
+    image_folder = st.sidebar.text_input("Enter Image Folder Path", "../../images/mathv360k")
+    
     # Select number of questions per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
     
@@ -76,15 +130,21 @@ def main():
 
         st.header(f"Question: {i + 1}")
 
-        # Display image (from file)
-        image = load_image_from_file(row['image'])
-        st.image(image, caption=f"Qs: {start_index + i + 1}", use_column_width=True)
+        question, answer = extract_question_answer( row['conversation'])
 
-        # Display conversation
-        if 'conversations' in row:
-            display_conversation(row['conversations'])
-        else:
-            st.write("Conversation data not found.")
+        st.write(question)
+
+        # Display image (from file)
+        image = load_image_from_file(row['image'], image_folder)  # Pass the user-defined image folder
+        
+        # Check if the image was loaded successfully
+        if image is not None:
+            st.image(image, caption=f"Qs: {start_index + i + 1}", use_column_width=True)
+        
+        if st.button(f"Correct ßAnswer: {i + 1}"):
+            st.write(answer)
+
+        ask_vlm(question, None, image, i+1)
 
         st.divider()
 

@@ -2,6 +2,7 @@ import streamlit as st
 from datasets import load_dataset
 
 from vlm_chat import LlavaChat
+from io import BytesIO
 import time 
 
 st.set_page_config(layout="wide")
@@ -16,6 +17,34 @@ def build_prompt(question, options):
     else:
         prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
+
+def ask_vlm(question, options, image, index):
+    
+    # Convert image to bytes if it exists
+    if image:
+        img_byte_arr = BytesIO()
+        # Convert image to RGB mode if it is in RGBA
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
+        img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+        image = img_byte_arr  # Update image to byte stream
+
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                print(prompt)
+                answer = vlm.get_answer(prompt, image)  
+                elapsed_time = time.time() - start_time 
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
 
 def explore_data():
 
@@ -97,17 +126,6 @@ def explore_data():
             image = row['decoded_image']
             st.image(image, caption=f"Qs:{i+1}")
                 
-        # Convert image to bytes if it exists
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            # Convert image to RGB mode if it is in RGBA
-            if image.mode == 'RGBA':
-                image = image.convert('RGB')
-            image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
-
         options = None
         if row['choices']:
             options = [f"({chr(65 + i)}) {choice}" for i, choice in enumerate(row['choices'])]
@@ -118,23 +136,7 @@ def explore_data():
             if st.button(f"Human Answer:{i+1}"):
                 st.write(row['answer'])
 
-        prompt = build_prompt(question, options)
-
-        # Use a button to trigger the answer retrieval
-        if st.button(f"Ask VLM : {i + 1}"):
-            st.session_state.processing = True  # Set processing state
-            with st.spinner("Retrieving answer..."):
-                start_time = time.time()  # Start the timer
-                try:
-                    print(prompt)
-                    answer = vlm.get_answer(prompt, image)  
-                    elapsed_time = time.time() - start_time 
-                    st.write(f"Model answer: {answer}")
-                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
-                except Exception as e:
-                    st.error(f"Error retrieving answer: {str(e)}")
-                finally:
-                    st.session_state.processing = False  # Reset processing state
+        ask_vlm(question, options, image, i+1)
 
         st.divider()
 

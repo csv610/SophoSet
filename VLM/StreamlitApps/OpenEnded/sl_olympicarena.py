@@ -30,6 +30,33 @@ def build_prompt(question, options=None):
         prompt = f"You are an expoert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
+def ask_vlm(question, options, image, index):
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
+# Convert image to bytes if it exists
+        if image:
+            from io import BytesIO
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
+
 # Streamlit app
 def main():
     # Sidebar for subject selection
@@ -78,32 +105,7 @@ def main():
                 except Exception as e:
                     st.write(f"Unable to load image from {url}: {e}")
 
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            # Convert image to RGB mode if it is in RGBA
-            if image.mode == 'RGBA':
-                image = image.convert('RGB')
-            image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
-
-        # Use a button to trigger the answer retrieval
-        if st.button(f"Ask VLM : {i+1}"):
-            vlm = load_vlm_model()
-            prompt = build_prompt(question)
-            st.session_state.processing = True  # Set processing state
-            with st.spinner("Retrieving answer..."):
-                start_time = time.time()  # Start the timer
-                try:  # Fixed indentation
-                    answer = vlm.get_answer(prompt, image)  
-                    elapsed_time = time.time() - start_time 
-                    st.write(f"Model answer: {answer}")
-                    st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
-                except Exception as e:
-                    st.error(f"Error retrieving answer: {str(e)}")
-                finally:
-                    st.session_state.processing = False  # Reset processing state
+        ask_vlm(question, None, image, i+1)
 
         st.divider()
 

@@ -28,6 +28,34 @@ def build_prompt(question, options):
         prompt = f"You are an intellgent assistant. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
+def ask_vlm(question, options, image, index):
+    # Use a button to trigger the answer retrieval
+    if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
+# Convert image to bytes if it exists
+        if image:
+            from io import BytesIO
+            img_byte_arr = BytesIO()
+            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
+            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
+            image = img_byte_arr  # Update image to byte stream
+
+        st.session_state.processing = True  # Set processing state
+        with st.spinner("Retrieving answer..."):
+            start_time = time.time()  # Start the timer
+            try:
+                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                st.write(f"Model answer: {answer}")
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+            except Exception as e:
+                st.error(f"Error retrieving answer: {str(e)}")
+            finally:
+                st.session_state.processing = False  # Reset processing state
+    
+
 def config_panel() -> Tuple[Optional[dict], int, int]:
     """Handle the contents of the left panel (sidebar)."""
     st.sidebar.title("RealworldQA")
@@ -66,9 +94,9 @@ def split_text(text: str) -> Tuple[str, List[str]]:
 
     return question, options
 
-def display_question(index: int, row: dict):
+def process_question(qs_num: int, row: dict):
     """Display a single question with its image and answer."""
-    st.header(f"Question: {index}")
+    st.header(f"Question: {qs_num}")
 
     question, options = split_text(row['question'])
 
@@ -77,19 +105,8 @@ def display_question(index: int, row: dict):
     image = None
     if row['image']:
         image = row['image']
-        st.image(image, caption=f"Qs:{index}")
-                
-    # Convert image to bytes if it exists
-    if image:
-        from io import BytesIO
-        img_byte_arr = BytesIO()
-        # Convert image to RGB mode if it is in RGBA
-        if image.mode == 'RGBA':
-            image = image.convert('RGB')
-        image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
-        img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-        image = img_byte_arr  # Update image to byte stream
-    
+        st.image(image, caption=f"Qs:{qs_num}")
+                    
     if options:
         for option in options:
             st.write(option)
@@ -97,29 +114,11 @@ def display_question(index: int, row: dict):
     with st.expander("Show Answer"):
         st.write(f"Answer: {row['answer']}")
     
-    vlm = load_vlm_model()
-    prompt = build_prompt(question, options)
-
-    # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
-        st.session_state.processing = True  # Set processing state
-        with st.spinner("Retrieving answer..."):
-            start_time = time.time()  # Start the timer
-            try:  # Fixed indentation
-                print(prompt)
-                answer = vlm.get_answer(prompt, image)  
-                elapsed_time = time.time() - start_time 
-                st.write(f"Model answer: {answer}")
-                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
-            except Exception as e:
-                st.error(f"Error retrieving answer: {str(e)}")
-            finally:
-                st.session_state.processing = False  # Reset processing state
+    ask_vlm(question, options, image, qs_num)
 
     st.divider()
 
 def view_dataset():
-
 
     dataset, num_items_per_page, selected_page = config_panel()
 
@@ -131,18 +130,7 @@ def view_dataset():
     end_index = min(start_index + num_items_per_page, len(dataset))
 
     for i in range(start_index, end_index):
-        display_question(i + 1, dataset[i])
-
-    # Add navigation buttons
-    if selected_page > 1:
-        if st.button("Previous Page"):
-            st.session_state.page = selected_page - 1
-            st.experimental_rerun()
-
-    if selected_page < (len(dataset) // num_items_per_page) + 1:
-        if st.button("Next Page"):
-            st.session_state.page = selected_page + 1
-            st.experimental_rerun()
+        process_question(i + 1, dataset[i])
 
 if __name__ == "__main__":
     view_dataset()

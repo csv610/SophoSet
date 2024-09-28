@@ -130,7 +130,7 @@ def main():
 
         st.header(f"Question: {i + 1}")
 
-        question, answer = extract_question_answer( row['conversation'])
+        question, answer = extract_question_answer( row['conversations'])
 
         st.write(question)
 

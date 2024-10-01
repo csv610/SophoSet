@@ -59,6 +59,11 @@ def process_dataset(nsamples=None):
     llm = LLMChat(model_name)
     df = process_subset(llm, "validation", nsamples)
 
+    # Check if df is not None and empty
+    if df is None or df.empty:
+        logger.warning("DataFrame is empty or None. Exiting process.")
+        return
+
     if not os.path.exists('results'):
         os.makedirs('results')
 

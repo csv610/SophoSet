@@ -126,16 +126,19 @@ def process_dataset(model_name: str, nsamples: Optional[int] = None) -> None:
             else:
                 logger.warning(f"Failed to process {subset} - {split}")
 
-    if not os.path.exists('results'):
-        os.makedirs('results')
 
-    if frames:
-        final_frame = pd.concat(frames, ignore_index=True)
-        filename = f"results/bigbenchhard_result_{model_name}"
-        final_frame.to_csv(filename, index=False)
-        logger.info(f"Data saved to {filename}jjkk")
-    else:
-        logger.error("No data processed. Unable to create CSV file.")
+    # Check if frames is None or empty
+    if frames is None or not frames:
+        logger.warning("No data frames to process. Skipping results directory creation.")
+
+    if not os.path.exists('results'):
+            os.makedirs('results')
+
+    final_frame = pd.concat(frames, ignore_index=True)
+    filename = f"results/bigbenchhard_result_{model_name}"
+    final_frame.to_csv(filename, index=False)
+    logger.info(f"Data saved to {filename}jjkk")
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process BigBenchHard dataset")

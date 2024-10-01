@@ -75,8 +75,13 @@ def process_dataset(nsamples = None):
         if df is not None:
             dataframes.append(df)
     
-    # Combine all DataFrames into a single DataFrame
+    # Check if dataframes are valid before concatenating
+    if not dataframes or any(df is None or df.empty for df in dataframes):
+        logger.warning("No valid data frames to concatenate. Exiting process.")
+        return
+    
     combined_df = pd.concat(dataframes, ignore_index=True)
+    
     logger.info(f"Combined DataFrame created with {len(combined_df)} total questions")
 
     if not os.path.exists('results'):

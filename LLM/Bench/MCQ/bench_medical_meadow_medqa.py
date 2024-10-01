@@ -74,16 +74,19 @@ def process_dataset(model_name, nsamples=None):
     llm = LLMChat(model_name)
     final_frame = process_subset(llm, nsamples=nsamples)
 
+    # Check if final_frame is not None before creating results directory
+    if final_frame is None:
+        logger.warning("No final frame to process. Skipping results directory creation.")
+        return
+    
     if not os.path.exists('results'):
         os.makedirs('results')
 
-    if final_frame is not None:
-        # Write the DataFrame to a CSV file
-        filename = f"results/medical_meadow_medqa_result_{model_name}.csv"
-        final_frame.to_csv(filename, index=False)
-        logger.info(f"Results have been saved to {filename}")
-    else:
-        logger.warning("No results to save. Check for errors in processing.")
+    # Write the DataFrame to a CSV file
+    filename = f"results/medical_meadow_medqa_result_{model_name}.csv"
+    final_frame.to_csv(filename, index=False)
+    logger.info(f"Results have been saved to {filename}")
+
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medical Meadow MedQA dataset")

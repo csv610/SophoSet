@@ -60,7 +60,7 @@ def process_subset(llm, subject, split, nsamples=None):
     logging.info(f"Completed processing subset: {subject} - {split}")
     return pd.DataFrame(data)
 
-def process_dataset(nsamples=None):
+def process_dataset(nsamples=None, model_name=None):
     logging.info(f"Starting MMLU dataset processing with nsamples={nsamples}")
 
     # Dictionary of categories and their corresponding subjects
@@ -100,11 +100,15 @@ def process_dataset(nsamples=None):
         ]
     }
 
-    model_name = "llama3.1"
+    # Initialize LLMChat and check if it was created successfully
     llm = LLMChat(model_name)
+    if llm is None:
+        logging.error("Failed to initialize LLMChat. Exiting process.")
+        return
+
     logging.info(f"Initialized LLMChat with model: {model_name}")
 
-    splits = ["test", "validation", "dev"]
+    splits = ["test", "validation", "dev"]  # Constant string for dataset splits
 
     # Iterate over all categories, subjects, and splits
     frames = []
@@ -114,8 +118,18 @@ def process_dataset(nsamples=None):
                 df = process_subset(llm, subject, split, nsamples)
                 frames.append(df)
 
-    # Concatenate all dataframes into one
-    final_df = pd.concat(frames, ignore_index=True)
+    # Check if frames are valid before proceeding
+    if not frames or any(df is None or df.empty for df in frames):
+        logging.warning("No valid frames to process. Exiting process.")
+        return
+
+    # Check if frames is empty before concatenating
+    if frames:
+        final_df = pd.concat(frames, ignore_index=True)
+    else:
+        logging.warning("No data frames to concatenate. Exiting process.")
+        return
+
     logging.info(f"Final dataset shape: {final_df.shape}")
     
     # Save the final dataframe to a CSV file
@@ -128,9 +142,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     parser = argparse.ArgumentParser(description="Process MMLU dataset")
-    parser.add_argument("-n", "--nsamples", type=int, default=None, help="Number of samples to process. If not provided, process all samples.")
+    parser.add_argument("-m", "--model", type=str, default="llama3.2", help="Model name to use (default: llama3.2)")
     args = parser.parse_args()
 
     logging.info(f"Starting MMLU dataset processing with nsamples={args.nsamples}")
-    process_dataset(nsamples=args.nsamples)
+    process_dataset(nsamples=args.nsamples, model_name=args.model)
     logging.info("MMLU dataset processing completed")

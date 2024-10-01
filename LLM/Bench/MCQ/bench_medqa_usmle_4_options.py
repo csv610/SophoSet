@@ -13,7 +13,6 @@ from datasets import load_dataset
 MODEL_ID = "GBaker/MedQA-USMLE-4-options"
 SPLITS = ["train", "test"]
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -68,6 +67,11 @@ def process_dataset(model_name, nsamples=None):
             logger.info(f"Loaded {len(df)} questions from {split} split")
         else:
             logger.warning(f"Failed to load data for {split} split")
+
+    # Check if dataframes are valid before creating results directory
+    if not dataframes:
+        logger.error("No dataframes to process. Skipping results directory creation.")
+        return  # Exit if there are no dataframes
 
     if not os.path.exists('results'):
         os.makedirs('results')    

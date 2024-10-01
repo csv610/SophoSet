@@ -79,8 +79,13 @@ def process_dataset(nsamples: Optional[int] = None, model_name: str = None) -> N
             else:
                 logger.warning(f"Failed to load dataset for {subset} - {split}")
 
-    # Combine all DataFrames
-    final_df = pd.concat(frames, ignore_index=True)
+    # Check if frames is empty before concatenating
+    if frames:
+        final_df = pd.concat(frames, ignore_index=True)
+    else:
+        logger.warning("No data frames to concatenate. Exiting process.")
+        return
+    
     logger.info(f"Combined all DataFrames. Total rows: {len(final_df)}")
     
     # Ensure results directory exists; create it if it does not

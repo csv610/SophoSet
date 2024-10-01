@@ -52,13 +52,18 @@ def process_dataset(model_name, nsamples=None):
     llm = LLMChat(model_name)
 
     df = process_subset(llm, nsamples=nsamples)
+    
+    # Check if df is valid before creating results directory
+    if df is None or df.empty:
+        logging.warning("DataFrame is empty or None. Skipping results directory creation.")
+        return  # Exit the function if df is not valid
+    
     if not os.path.exists('results'):
-        os.makedirs('results')
+            os.makedirs('results')
 
-    if df is not None:
-        filename = f"results/medmcqa_result_{model_name}.csv"
-        df.to_csv(filename, index=False)
-        logging.info(f"Results saved to {filename}")
+    filename = f"results/medmcqa_result_{model_name}.csv"
+    df.to_csv(filename, index=False)
+    logging.info(f"Results saved to {filename}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Medmcqa dataset")

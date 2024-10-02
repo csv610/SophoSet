@@ -9,9 +9,14 @@ st.set_page_config(layout="wide")
 # Load the dataset
 @st.cache_data()
 def load_data():
-    ds = load_dataset("TIGER-Lab/TheoremQA")
+    try:
+        ds = load_dataset("TIGER-Lab/TheoremQA")
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None  # Return None or handle as needed
     return ds['test']
 
+@st.cache_resource()
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -25,17 +30,9 @@ def build_prompt(question, options=None):
 
 def ask_vlm(question, options, image, index):
     # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
-
-# Convert image to bytes if it exists
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
 
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
@@ -43,18 +40,16 @@ def ask_vlm(question, options, image, index):
             try:
                 answer = vlm.get_answer(prompt, image)  # Pass the byte stream
                 elapsed_time = time.time() - start_time  # Calculate elapsed time
-                st.write(f"Model answer: {answer}")
+                st.write(f"Model answer #{answer}")
                 st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
             except Exception as e:
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
-                st.session_state.processing = False  # Reset pr
-
-
-
+                st.session_state.processing = False 
+                
 def config_panel():
     """Function to handle the contents of the left panel (sidebar)."""
-    st.sidebar.title("Navigation")
+    st.sidebar.title("TheoremQA")
 
     # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
@@ -70,42 +65,45 @@ def config_panel():
     page_options = list(range(1, total_pages + 1))
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    return dataset, num_items_per_page, selected_page
-
-# Streamlit app
-def view_dataset():
-    st.title("Dataset: TheoremQA")
-
-    # Get sidebar selections
-    dataset, num_items_per_page, selected_page = config_panel()
-
     # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, len(dataset))
 
+    return dataset, start_index, end_index
+
+def process_question(row, index):
+    st.header(f"Question #{index}")
+
+    # Display question and answer
+    question = row['Question']
+    st.write(question)
+    st.write("")  # Add vertical space
+
+    image = None
+    if row['Picture']:
+        image = row['Picture']
+        st.image(image)  # Display the image
+
+    if st.button(f"Show Correct Answer #{index}"):
+        answer = row['Answer']
+        st.write(answer)
+
+    ask_vlm(question, None, image, index)
+
+    st.divider()  # Divider between items
+
+
+# Streamlit app
+def process_dataset():   
+    dataset, start_index, end_index = config_panel()
+    
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
+
     for i in range(start_index, end_index):
-        row = dataset[i]
-        st.header(f"Question: {i + 1}")
-
-        # Display question and answer
-        question = row['Question']
-        # Use the helper function to display text with custom font size and add spacing
-        st.write(question)
-        st.write("")  # Add vertical space
-
-        image = None
-        if row['Picture']:
-           image = row['Picture']
-           st.image(num_items_per_page)
-
-        if st.button(f"Correct ßAnswer: {i + 1}"):
-            answer = row['Answer']
-            st.write(answer)
-
-        ask_vlm(question, None, image, i+1)
-
-        st.divider()  # Divider between items
+        process_question(dataset[i], i+1)
 
 if __name__ == "__main__":
-    view_dataset()
+    process_dataset()
 

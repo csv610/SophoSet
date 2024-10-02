@@ -7,6 +7,26 @@ import time
 
 st.set_page_config(layout="wide")
 
+# Constants
+QUESTION_HEADER = "Question: "
+HUMAN_ANSWER_BUTTON = "Human Answer:"
+VLM_ASK_BUTTON = "Ask VLM : "
+
+# Constants for context options
+CONTEXT_OPTIONS = [
+    "all", "abstract scene", "bar chart", "document image", 
+    "function plot", "geometry diagram", "heatmap chart", "line plot", 
+    "map chart", "medical image", "natural image", "pie chart", 
+    "puzzle test", "radar chart", "scatter plot", "scientific image", 
+    "synthetic scene", "table", "violin plot", "word cloud"
+]
+# Constants for skill options
+SKILL_OPTIONS = [
+        "all", "algebraic reasoning", "arithmetic reasoning",  
+        "geometry reasoning", "logical reasoning", "numeric commonsense", 
+        "scientific reasoning", "statistical reasoning"
+]
+
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -18,25 +38,21 @@ def build_prompt(question, options):
         prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
+def generate_options(choices):
+    """Generate formatted options from choices."""
+    return [f"({chr(65 + i)}) {choice}" for i, choice in enumerate(choices)]
+
 def ask_vlm(question, options, image, index):
     
-    # Convert image to bytes if it exists
-    if image:
-        img_byte_arr = BytesIO()
-        # Convert image to RGB mode if it is in RGBA
-        if image.mode == 'RGBA':
-            image = image.convert('RGB')
-        image.save(img_byte_arr, format='JPEG')  # Change 'JPG' to 'JPEG'
-        img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-        image = img_byte_arr  # Update image to byte stream
-
     # Use a button to trigger the answer retrieval
     if st.button(f"Ask VLM : {index}"):
+        vlm = load_vlm_model()
+        prompt = build_prompt(question, options)
+
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
             start_time = time.time()  # Start the timer
             try:
-                print(prompt)
                 answer = vlm.get_answer(prompt, image)  
                 elapsed_time = time.time() - start_time 
                 st.write(f"Model answer: {answer}")
@@ -46,7 +62,25 @@ def ask_vlm(question, options, image, index):
             finally:
                 st.session_state.processing = False  # Reset processing state
 
-def explore_data():
+def process_question(row: dict, index: int):
+    st.header(f"{QUESTION_HEADER}{index}")
+    st.write(row['question'])
+
+    image = row['decoded_image']
+    if image:
+        st.image(image, caption=f"Qs:{index}")
+
+    options = generate_options(row['choices']) if row['choices'] else []
+    for choice in options:
+        st.write(choice)
+
+    if row['answer'] and st.button(f"{HUMAN_ANSWER_BUTTON}{index}"):
+        st.write(row['answer'])
+
+    ask_vlm(row['question'], options, image, index)
+    st.divider()
+
+def config_panel():
 
     st.sidebar.title("MathVista")
 
@@ -78,20 +112,16 @@ def explore_data():
     if opt_grade != "all":
         dataset = dataset.filter(lambda x: x['metadata']['grade'].lower() == opt_grade.lower())
 
-    # Select the context
-    opt_context = st.sidebar.selectbox("Select context", ["all", "abstract scene", "bar chart", "document image", 
-    "function plot", "geometry diagram", "heatmap chart", "line plot", "map chart", "medical image", 
-    "natural image", "pie chart", "puzzle test", "radar chart", "scatter plot", "scientific image", 
-    "synthetic scene", "table", "violin plot", "word cloud"])
+    # Update the selectbox to use the constant
+    opt_context = st.sidebar.selectbox("Select context", CONTEXT_OPTIONS)
 
     # Filter the dataset based on the selected context
     if opt_context != "all":
         dataset = dataset.filter(lambda x: x['metadata']['context'].lower() == opt_context.lower())
 
-    # Select the skill
-    opt_skill = st.sidebar.selectbox("Select Skill", ["all", "algebraic reasoning", "arithmetic reasoning",  
-    "geometry reasoning", "logical reasoning", "numeric commonsense", "scientific reasoning", 
-    "statistical reasoning"])
+    
+    # Update the selectbox to use the constant
+    opt_skill = st.sidebar.selectbox("Select Skill", SKILL_OPTIONS)
 
     # Filter the dataset based on the selected skill
     if opt_skill != "all":
@@ -112,34 +142,18 @@ def explore_data():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    vlm = load_vlm_model()
+    return dataset, start_index, end_index
+
+def process_dataset():
+    dataset, start_index, end_index = config_panel()
+    
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
 
     for i in range(start_index, end_index):
-        row = dataset[i]
-
-        st.header(f"Question: {i+1}")
-        question = row['question']
-        st.write(question)
-
-        image = None
-        if row['decoded_image']:
-            image = row['decoded_image']
-            st.image(image, caption=f"Qs:{i+1}")
-                
-        options = None
-        if row['choices']:
-            options = [f"({chr(65 + i)}) {choice}" for i, choice in enumerate(row['choices'])]
-            for choice in options:
-                st.write(choice)
-
-        if row['answer']:
-            if st.button(f"Human Answer:{i+1}"):
-                st.write(row['answer'])
-
-        ask_vlm(question, options, image, i+1)
-
-        st.divider()
+        process_question(dataset[i], i + 1)
 
 if __name__ == "__main__":
-    explore_data()
+    process_dataset()
 

@@ -21,6 +21,7 @@ def load_image(image_url):
     response = requests.get(image_url)
     return Image.open(BytesIO(response.content))
 
+@st.cache_data()  # Cache
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -34,17 +35,9 @@ def build_prompt(question, options=None):
 
 def ask_vlm(question, options, image, index):
     # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
-
-# Convert image to bytes if it exists
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
 
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
@@ -60,7 +53,7 @@ def ask_vlm(question, options, image, index):
                 st.session_state.processing = False  # Reset processing state
 
 # Streamlit app
-def main():
+def config_panel():
     # Sidebar for subject selection
     st.sidebar.title("OlympicArena")
     subject = st.sidebar.selectbox(
@@ -89,38 +82,46 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    return dataset, start_index, end_index
+
+def process_question(row, index):
+    st.header(f"Question #{index}")
+
+    # Display instruction
+    question = row['problem']
+    st.write(question)
+    
+    # Detect the language of the question
+    try:
+        language = detect(question)            
+        if language != 'en':
+            st.write(f"Detected language: {language}")
+    except Exception as e:
+        st.error(f"Error detecting language: {str(e)}")
+
+    # Display images
+    image = None
+    if row['figure_urls']:
+        for url in row['figure_urls']:
+            try:
+                image = load_image(url)
+                st.image(image, caption=f"Item {index}", use_column_width=True)
+            except Exception as e:
+                st.write(f"Unable to load image from {url}: {e}")
+
+    ask_vlm(question, None, image, index)
+    st.divider()
+
+def process_dataset():
+    dataset, start_index, end_index = config_panel()
+    
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
+
     for i in range(start_index, end_index):
-        row = dataset[i]
-        st.header(f"Question: {i + 1}")
-
-        # Display instruction
-        question = row['problem']
-
-        st.write(question)
-        
-        # Detect the language of the question
-        try:
-            language = detect(question)            
-            if language != 'en':
-                st.write(f"Detected language: {language}")
-               
-        except Exception as e:
-            st.error(f"Error detecting language: {str(e)}")
-
-        # Display images
-        image = None
-        if row['figure_urls']:
-            for url in row['figure_urls']:
-                try:
-                    image = load_image(url)
-                    st.image(image, caption=f"Item {start_index + i + 1}", use_column_width=True)
-                except Exception as e:
-                    st.write(f"Unable to load image from {url}: {e}")
-
-        ask_vlm(question, None, image, i+1)
-
-        st.divider()
-
+        process_question(dataset[i], i+1)
+      
 if __name__ == "__main__":
-    main()
+    process_dataset()
 

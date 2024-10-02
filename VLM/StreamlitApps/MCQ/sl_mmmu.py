@@ -1,9 +1,10 @@
+import time
+import re
+from io import BytesIO
+
 import streamlit as st
 from datasets import load_dataset
-import re
 from vlm_chat import LlavaChat
-from io import BytesIO
-import time 
 
 st.set_page_config(layout="wide")
 
@@ -33,12 +34,6 @@ def load_data(subset, split):
         raise ValueError(f"Failed to load dataset for subset '{subset}' and split '{split}'")
 
 def config_panel():
-    """
-    Configure the sidebar panel for user interaction, including subset, split, and pagination settings.
-
-    Returns:
-        tuple: Contains the loaded dataset, number of items per page, and the selected page number.
-    """
     st.sidebar.title("MMMU")
 
     # Subset selection
@@ -47,21 +42,24 @@ def config_panel():
     # Split selection
     split = st.sidebar.selectbox("Select Split", ["test", "validation", "dev"])
 
-    # Select number of items per page
-    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
     # Load dataset
     dataset = load_data(subset, split)
 
+    # Select number of items per page
+    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
+    
     # Calculate total pages
     total_items = len(dataset)
     total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
 
     # Page selection box
-    page_options = list(range(1, total_pages + 1))
-    selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
+    selected_page = st.sidebar.selectbox("Select Page Number", options=list(range(1, total_pages + 1)))
 
-    return dataset, num_items_per_page, selected_page
+    # Calculate start and end index
+    start_index = (selected_page - 1) * num_items_per_page
+    end_index = min(start_index + num_items_per_page, len(dataset))
+
+    return dataset, start_index, end_index  # Updated return values
 
 def load_vlm_model():
     vlm = LlavaChat()
@@ -75,16 +73,9 @@ def build_prompt(question, options=None):
     return prompt
 
 def ask_vlm(question, options, image, index):
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
-
-        # Convert image to bytes if it exists
-        if image:   
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
 
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
@@ -119,48 +110,53 @@ def parse_options(options_str):
     
     return cleaned_options
 
-def view_dataset():
-    # Get sidebar selections
-    dataset, num_items_per_page, selected_page = config_panel()
+def process_question(row, qindex):
+    st.header(f"Question #{qindex}")
 
-    # Display items for the selected page
-    start_index = (selected_page - 1) * num_items_per_page
-    end_index = min(start_index + num_items_per_page, len(dataset))
+    # Display question 
+    question = row['question']
+    st.write(question)
+    st.write("")  # Add vertical space
 
-    for i in range(start_index, end_index):
-        row = dataset[i]
-        st.header(f"Question: {i + 1}")
+    images = []
+    for j in range(1, 8):
+        image_key = f"image_{j}"
+        if row[image_key] is not None:
+            image = row[image_key]
+            if image:
+                images.append(image)
+                st.image(image, caption=f"Qs: {qindex} Image{j}")
+    st.write("")  # Add vertical space
 
-        # Display question 
-        question = row['question']
-        st.write(question)
-        st.write("")  # Add vertical space
+    # Parse the options
+    options_str = row['options']
+    options = parse_options(options_str)
 
-        images = []
-        for j in range(1, 8):
-            image_key = f"image_{j}"
-            if row[image_key] is not None:
-               image = row[image_key]
-               images.append(image)
-               st.image(image, caption = f"Qs: {i} Image{j}")
-        st.write("")  # Add vertical space
-
-        # Parse the options
-        options_str = row['options']
-        options = parse_options(options_str)
-
+    if options:
         st.write("Options:")
         for idx, option in enumerate(options):
             st.write(f"({chr(65 + idx)}) {option}")
 
-        if st.button(f"Correct Answer: {i + 1}"):
-            st.write(row['answer'])
-            st.write("")  # Add vertical space
+    if st.button(f"Show Correct Answer #{qindex}"):
+        st.write(row['answer'])
+        st.write("")  # Add vertical space
 
-        ask_vlm(question, options, images, i+1)
+    ask_vlm(question, options, images, qindex)
+    
+    st.divider()
 
-        st.divider()
+# Update the view_dataset function to use process_question
+def process_dataset():
+
+    dataset, start_index, end_index = config_panel() 
+    
+    if dataset is None:
+        st.error("Dataset could not be loaded. Please try again.")
+        return
+
+    for i in range(start_index, end_index):
+        process_question(dataset[i], i+1)  # Call the new function 
 
 if __name__ == "__main__":
-    view_dataset()
+    process_dataset()
 

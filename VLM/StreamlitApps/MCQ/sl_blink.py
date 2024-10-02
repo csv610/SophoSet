@@ -1,10 +1,11 @@
-import streamlit as st
-from datasets import load_dataset
+import time
 import string
-
-from vlm_chat import LlavaChat
 from io import BytesIO
-import time 
+
+import streamlit as st
+from PIL import Image
+from datasets import load_dataset
+from vlm_chat import LlavaChat
 
 st.set_page_config(layout="wide")
 
@@ -43,16 +44,9 @@ def build_prompt(question, options=None):
     return prompt
 
 def ask_vlm(question, options, image, index):
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
-
-        # Convert image to bytes if it exists
-        if image:
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
 
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
@@ -67,9 +61,34 @@ def ask_vlm(question, options, image, index):
             finally:
                 st.session_state.processing = False  # Reset processing state
 
-# Streamlit app
-def main():
-    # Sidebar for navigation
+def process_question(row, index):
+    st.header(f"Question {index + 1}")
+
+    # Display question
+    question = row['question']
+    st.write(question)
+
+    # Display images
+    images = []
+    for j in range(1, 5):
+        image_key = f'image_{j}'
+        if row[image_key] is not None:
+            image = row[image_key]
+            images.append(image)
+            st.image(image, caption=f"Image {j}", width=500)
+
+    options = NotImplementedError
+    if row['choices'] is not None:
+        options = row['choices']
+        for idx, option in enumerate(options):
+            st.write(f"({chr(65 + idx)}) {option}")  # chr(65) is 'A'
+    
+    if st.button(f"Correct Answer #{index}"):
+        st.write(row['answer'])
+
+    ask_vlm(question, options, images, index)
+
+def config_panel():
     st.sidebar.title("BLINK")
 
     # Subset selection
@@ -91,39 +110,22 @@ def main():
     # Page selection box
     selected_page = st.sidebar.selectbox("Select Page Number", options=range(1, total_pages + 1))
 
-    # Display items for the selected page
+    # Calculate start and end index
     start_index = (selected_page - 1) * num_items_per_page
-    end_index = min(start_index + num_items_per_page, total_items)
+    end_index = min(start_index + num_items_per_page, len(dataset))
+
+    return dataset, start_index, end_index 
+
+# Streamlit app
+def process_dataset():
+    dataset, start_index, end_index = config_panel() 
+
+    if dataset is None: 
+        st.error("Dataset could not be loaded. Please try again.")
+        return
 
     for i in range(start_index, end_index):
-        row = dataset[i]
-        st.header(f"Question {i + 1}")
-
-        # Display question
-        question = row['question']
-        st.write(question)
-
-        # Display images
-        images = []
-        for j in range(1, 5):
-            image_key = f'image_{j}'
-            if row[image_key] is not None:
-                image = row[image_key]
-                images.append(image)
-                st.image(image, caption=f"Image {j}", width = 500)
-
-        options = NotImplementedError
-        if row['choices'] is not None:
-            options = row['choices']
-            for idx, option in enumerate(options):
-                st.write(f"({chr(65 + idx)}) {option}")  # chr(65) is 'A'
-    
-        if st.button(f"Correct Answer: {i + 1}"):
-            st.write(row['answer'])
-
-        ask_vlm(question, options, images, i+1)
-
-        st.divider()
+        process_question(dataset[i], i+1)
 
 if __name__ == "__main__":
-    main()
+    process_dataset()

@@ -1,22 +1,23 @@
-import streamlit as st
-from datasets import load_dataset
-from PIL import Image
-import requests
-from io import BytesIO
-from vlm_chat import LlavaChat
 import time 
+import requests
+
+from io import BytesIO
+from PIL import Image
+from datasets import load_dataset
+import streamlit as st
+from vlm_chat import LlavaChat
 
 # Load the dataset
 @st.cache_data()
 def load_data():
-    dataset = load_dataset("mlfoundations/VisIT-Bench", split="test")
-    return dataset
+    try:
+        ds = load_dataset("mlfoundations/VisIT-Bench", split="test")
+    except Exception as e:
+        st.error(f"Error loading dataset: {str(e)}")
+        return None  # Return None or handle as needed
+    return ds
 
-# Function to load image from a URL
-def load_image_from_url(image_url):
-    response = requests.get(image_url)
-    return Image.open(BytesIO(response.content))
-
+@st.cache_data()
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -30,17 +31,9 @@ def build_prompt(question, options=None):
 
 def ask_vlm(question, options, image, index):
     # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
-
-# Convert image to bytes if it exists
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
 
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
@@ -48,15 +41,16 @@ def ask_vlm(question, options, image, index):
             try:
                 answer = vlm.get_answer(prompt, image)  # Pass the byte stream
                 elapsed_time = time.time() - start_time  # Calculate elapsed time
-                st.write(f"Model answer: {answer}")
+                st.write(f"Model answer #{answer}")
                 st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
             except Exception as e:
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
                 st.session_state.processing = False  # Reset processing state
     
+
 # Streamlit app
-def main():
+def config_panel():
     # Load dataset
     dataset = load_data()
 
@@ -77,23 +71,36 @@ def main():
     # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
-    page_data = dataset.select(range(start_index, end_index))
 
-    for i in range(len(page_data)):
-        row = page_data[i]
-        st.header(f"Question: {start_index + i + 1}")
+    return dataset, start_index, end_index
 
-        question = row['instruction']
-        st.write(question)
+def process_question(row, index):
+    st.header(f"Question #{index}")
 
-        image = None
-        if row['image'] is not None:
-            image = row['image']
-            st.image(image, caption=f"Item {start_index + i + 1}", use_column_width=True)
+    question = row['instruction']
+    st.write(question)
+
+    image = None
+    if row['image'] is not None:
+        image = row['image']
+        st.image(image, caption=f"Item {index}", use_column_width=True)
        
-        ask_vlm(question, None, image, i+1)
-        st.divider()
+    ask_vlm(question, None, image, index)
+    st.divider()
 
+def process_dataset():
+    dataset, start_index, end_index = config_panel()
+    
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
+
+    for i in range(start_index, end_index):
+        process_question(dataset[i], i+1)
+        
 if __name__ == "__main__":
-    main()
+    process_dataset()
+
+
+
 

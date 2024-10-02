@@ -1,11 +1,10 @@
+import time  # Ensure
 import os
-import streamlit as st
 
 from PIL import Image
+import streamlit as st
 from datasets import load_dataset
-
 from vlm_chat import LlavaChat
-import time  # Ensure
 
 st.set_page_config(layout="wide")
 
@@ -49,6 +48,7 @@ def display_conversation(conversation_list):
         elif speaker == "gpt":
             st.write(f"**GPT:** {message}")
 
+@st.cache_resource()  # Add caching to the model loading function
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -62,7 +62,7 @@ def build_prompt(question, options=None):
 
 def ask_vlm(question, options, image, index):
     # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
 
@@ -78,7 +78,7 @@ def ask_vlm(question, options, image, index):
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
                 st.session_state.processing = False  # Reset processing state
-    
+
 def extract_question_answer(conversation_list):
     question = None
     answer = None
@@ -95,10 +95,31 @@ def extract_question_answer(conversation_list):
     
     return question, answer
 
-# Streamlit app
-def main():
+def process_question(row, index, image_folder):
+    st.header(f"Question: {index + 1}")
+
+    question, answer = extract_question_answer(row['conversations'])
+
+    st.write(question)
+
+    # Display image (from file)
+    image = load_image_from_file(row['image'], image_folder)  # Pass the user-defined image folder
+    
+    # Check if the image was loaded successfully
+    if image is not None:
+        st.image(image, caption=f"Qs: {index}", use_column_width=True)
+    
+    if st.button(f"Show Correct Answer #{index}"):  # Updated button label
+        if answer:  # Check if answer is not None
+            st.write(answer)
+        else:
+            st.write("No answer available.")  # Inform the user if no answer is found
+
+    ask_vlm(question, None, image, index)
+
+def config_panel():
     # Load dataset
-    split   = 'train'
+    split = 'train'
     dataset = load_data(split)
 
     if dataset is None:
@@ -121,32 +142,25 @@ def main():
     page_options = list(range(1, total_pages + 1))
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    # Display items for the selected page
+    # Calculate start and end index for pagination
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
+    return dataset, start_index, end_index, image_folder
+
+# Streamlit app
+def process_dataset():
+    dataset, start_index, end_index, image_folder = config_panel()
+    
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
+
+    # Display items for the selected page
     for i in range(start_index, end_index):
-        row = dataset[i]
-
-        st.header(f"Question: {i + 1}")
-
-        question, answer = extract_question_answer( row['conversations'])
-
-        st.write(question)
-
-        # Display image (from file)
-        image = load_image_from_file(row['image'], image_folder)  # Pass the user-defined image folder
-        
-        # Check if the image was loaded successfully
-        if image is not None:
-            st.image(image, caption=f"Qs: {start_index + i + 1}", use_column_width=True)
-        
-        if st.button(f"Correct ßAnswer: {i + 1}"):
-            st.write(answer)
-
-        ask_vlm(question, None, image, i+1)
-
-        st.divider()
+        process_question(dataset[i], i+1, image_folder)
 
 if __name__ == "__main__":
-    main()
+    process_dataset()
+
+

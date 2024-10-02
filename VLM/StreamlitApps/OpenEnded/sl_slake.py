@@ -1,11 +1,11 @@
+import os
+import time
+from io import BytesIO
+
+from PIL import Image
 import streamlit as st
 from datasets import load_dataset
-from PIL import Image
-import os
-
 from vlm_chat import LlavaChat
-from io import BytesIO
-import time 
 
 # Load the dataset
 @st.cache_data()
@@ -13,10 +13,7 @@ def load_data():
     ds = load_dataset("BoKelvin/SLAKE")
     return ds
 
-# Function to load image from a local path
-def load_image_from_path(image_path):
-    return Image.open(image_path)
-
+@st.cache_resource()
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -34,14 +31,6 @@ def ask_vlm(question, options, image, index):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
 
-# Convert image to bytes if it exists
-        if image:
-            from io import BytesIO
-            img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format='JPEG')  # Save as JPEG
-            img_byte_arr.seek(0)  # Move to the beginning of the byte stream
-            image = img_byte_arr  # Update image to byte stream
-
         st.session_state.processing = True  # Set processing state
         with st.spinner("Retrieving answer..."):
             start_time = time.time()  # Start the timer
@@ -54,13 +43,29 @@ def ask_vlm(question, options, image, index):
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
                 st.session_state.processing = False  # Reset processing state
-    
 
-# Streamlit app
-def main():
+def process_question(row, img_dir, index):
+        st.header(f"Question #{index}")
+
+        # Display instruction
+        question = row['question']
+        st.write(question)
+
+        image = None
+        if row['img_name']:
+            image = row['img_name']
+            st.image(image, caption=f"Qs: {index}", use_column_width=True)
+
+        if st.button(f"Show Correct Answer #{index}"):
+            st.write(row['answer'])
+
+        ask_vlm(question, None, image, index)
+
+        st.divider()
+    
+def config_panel():
     # Load dataset
     dataset = load_data()
-
     split = "train"
     dataset = dataset[split]
 
@@ -86,30 +91,19 @@ def main():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    for i in range(start_index, end_index):
-        row = dataset[i]
-        st.header(f"Question: {i + 1}")
+    return dataset, start_index, end_index, img_dir
 
-        # Display instruction
-        question = row['question']
-        st.write(question)
-  
-        image = None
-        if row['img_name']:
-            image_path = os.path.join(img_dir, row['img_name'])
-            if os.path.exists(image_path):
-                image = load_image_from_path(image_path)
-                st.image(image, caption=f"Qs: {i + 1}", use_column_width=True)
-            else:
-                st.write("Image file not found.")
-
-        if st.button(f"Correct Answer: {i + 1}"):
-            st.write(row['answer'])
-
-        ask_vlm(question, None, image, i+1)
+# Streamlit app
+def process_dataset():
+    dataset, start_index, end_index, img_dir = config_panel()
     
-        st.divider()
+    if dataset is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return  # Exit the function if dataset is not loaded
 
+    for i in range(start_index, end_index):
+        process_question(dataset[i], img_dir, i + 1)
+    
 if __name__ == "__main__":
-    main()
+    process_dataset()
 

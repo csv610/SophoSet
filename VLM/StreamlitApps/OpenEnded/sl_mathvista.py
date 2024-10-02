@@ -1,9 +1,10 @@
+
+import time 
+
 import streamlit as st
 from datasets import load_dataset
-
 from vlm_chat import LlavaChat
 from io import BytesIO
-import time 
 
 st.set_page_config(layout="wide")
 
@@ -27,6 +28,7 @@ SKILL_OPTIONS = [
         "scientific reasoning", "statistical reasoning"
 ]
 
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

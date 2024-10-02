@@ -18,7 +18,7 @@ def load_data(split: str = "test"):
         st.error(f"Error loading dataset: {e}")
         return None
     
-@st.cache_data()  # Cache the model loading function
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

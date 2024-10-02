@@ -14,7 +14,7 @@ def load_data(split):
     ds = ds[split]
     return ds
 
-@st.cache_data()  # Cache the model loading function
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

@@ -13,7 +13,7 @@ def load_data():
     ds = load_dataset("BoKelvin/SLAKE")
     return ds
 
-@st.cache_resource()
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

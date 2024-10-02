@@ -21,7 +21,7 @@ def load_image(image_url):
     response = requests.get(image_url)
     return Image.open(BytesIO(response.content))
 
-@st.cache_data()  # Cache
+@st.cache_resource 
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

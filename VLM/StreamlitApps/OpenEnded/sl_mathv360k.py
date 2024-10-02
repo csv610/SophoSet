@@ -21,17 +21,6 @@ def load_data(split):
         st.error(f"Error loading dataset: {str(e)}")
         return None
 
-# Function to load image from a file
-def load_image_from_file(image_filename, image_folder="./images/mathv360k_images"):
-    image_path = os.path.join(image_folder, image_filename)
-    
-    # Check if the image path exists
-    if not os.path.exists(image_path):
-        st.error(f"Image not found: {image_path}")
-        return None  # Return None if the image does not exist
-    
-    return Image.open(image_path)
-
 # Function to display conversation with hint, question, and choices on separate lines
 def display_conversation(conversation_list):
     for entry in conversation_list:
@@ -48,7 +37,7 @@ def display_conversation(conversation_list):
         elif speaker == "gpt":
             st.write(f"**GPT:** {message}")
 
-@st.cache_resource()  # Add caching to the model loading function
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -102,8 +91,7 @@ def process_question(row, index, image_folder):
 
     st.write(question)
 
-    # Display image (from file)
-    image = load_image_from_file(row['image'], image_folder)  # Pass the user-defined image folder
+    image = image_folder + "/" + row['image']
     
     # Check if the image was loaded successfully
     if image is not None:

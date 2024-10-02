@@ -17,7 +17,7 @@ def load_data():
         return None  # Return None or handle as needed
     return ds
 
-@st.cache_data()
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

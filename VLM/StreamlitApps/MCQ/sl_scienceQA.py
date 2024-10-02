@@ -12,6 +12,7 @@ def load_data(split = 'train'):
     ds = ds[split]
     return ds
 
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -89,6 +90,7 @@ def process_question(row, index):
         st.write(f"Answer: {row['answer']}")
 
     ask_vlm(question, options, image, index)
+
     st.divider()
 
 # Update the main function to use process_question

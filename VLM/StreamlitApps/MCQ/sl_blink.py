@@ -17,6 +17,24 @@ SUBSETS = [
     'Relative_Depth', 'Spatial_Relation'
 ]
 
+Experts = {
+    "Art Style": ["Art Historians", "Aestheticians", "Visual Artists"],
+    "Functional Correspondence": ["Cognitive Scientists", "Visual Cognition Experts", "AI/ML Researchers in Vision"],
+    "Multi-view Reasoning": ["Spatial Cognition Experts", "3D Modeling Specialists", "Computer Vision Researchers"],
+    "Relative Reflectance": ["Physicists (Optics)", "Visual Perception Experts", "Material Scientists"],
+    "Visual Correspondence": ["Computer Vision Researchers", "Pattern Recognition Experts", "AI/ML Specialists"],
+    "Counting": ["Cognitive Psychologists", "Numerical Cognition Experts", "Educational Psychologists"],
+    "IQ Test": ["Psychometricians", "Cognitive Scientists", "Educational Testing Experts"],
+    "Object Localization": ["Computer Vision Experts", "Robotics Researchers", "AI/ML Researchers"],
+    "Semantic Correspondence": ["Linguists", "AI/ML Researchers", "Cognitive Scientists"],
+    "Visual Similarity": ["Cognitive Psychologists", "Computer Vision Experts", "Pattern Recognition Specialists"],
+    "Forensic Detection": ["Forensic Scientists", "Image Analysis Experts", "Criminal Investigators"],
+    "Jigsaw": ["Puzzle Designers", "Cognitive Psychologists", "Spatial Reasoning Experts"],
+    "Relative Depth": ["3D Graphics Experts", "Cognitive Psychologists", "Perception Scientists"],
+    "Spatial Relation": ["Cognitive Scientists", "AI/ML Researchers", "Spatial Reasoning Experts"]
+}
+
+
 # Define splits
 SPLITS = ["val", "test"]
 
@@ -31,7 +49,8 @@ def load_data(subset, split):
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
         return None
-    
+
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm
@@ -62,7 +81,7 @@ def ask_vlm(question, options, image, index):
                 st.session_state.processing = False  # Reset processing state
 
 def process_question(row, index):
-    st.header(f"Question {index + 1}")
+    st.header(f"Question #{index}")
 
     # Display question
     question = row['question']
@@ -74,21 +93,23 @@ def process_question(row, index):
         image_key = f'image_{j}'
         if row[image_key] is not None:
             image = row[image_key]
-            images.append(image)
-            st.image(image, caption=f"Image {j}", width=500)
+            if image:
+                images.append(image)
+                st.image(image, caption=f"Image {j}", width=500)
 
-    options = NotImplementedError
+    options = None
     if row['choices'] is not None:
         options = row['choices']
         for idx, option in enumerate(options):
             st.write(f"({chr(65 + idx)}) {option}")  # chr(65) is 'A'
     
-    if st.button(f"Correct Answer #{index}"):
+    if st.button(f"Show Correct Answer #{index}"):
         st.write(row['answer'])
 
     ask_vlm(question, options, images, index)
 
 def config_panel():
+
     st.sidebar.title("BLINK")
 
     # Subset selection
@@ -116,8 +137,8 @@ def config_panel():
 
     return dataset, start_index, end_index 
 
-# Streamlit app
 def process_dataset():
+
     dataset, start_index, end_index = config_panel() 
 
     if dataset is None: 
@@ -127,5 +148,6 @@ def process_dataset():
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)
 
+# Streamlit app
 if __name__ == "__main__":
     process_dataset()

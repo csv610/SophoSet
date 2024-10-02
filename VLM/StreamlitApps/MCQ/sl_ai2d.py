@@ -18,7 +18,6 @@ def load_data(split):
        st.error(f"Error loading dataset: {str(e)}")
        return None
     
-
 def config_panel():
     st.sidebar.title("AI2D")
 
@@ -45,7 +44,7 @@ def config_panel():
 
     return dataset, start_index, end_index
 
-@st.cache_resource()
+@st.cache_resource
 def load_vlm_model():
     vlm = LlavaChat()
     return vlm

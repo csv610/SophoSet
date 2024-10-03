@@ -97,7 +97,7 @@ def process_question(row, index, image_folder):
 
     # Check if the image folder exists
     if not os.path.exists(image_folder):
-        st.error(f"Image folder does not exist. Please check the path: {image_folder}.")
+        st.error(f"Image folder does not exist. Download images from Huggingface and place in the local folder {image_folder}.")
         return  # Exit the function if the folder does not exist
 
     image = os.path.join(image_folder, row['image'])

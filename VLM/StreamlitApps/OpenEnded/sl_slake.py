@@ -53,7 +53,10 @@ def process_question(row, img_dir, index):
 
         image = None
         if row['img_name']:
-            image = row['img_name']
+            if not os.path.exists(img_dir):
+                st.error(f"Image directory does not exist. Download the images from Huggingface and place in the local folder {img_dir}.")
+                return
+            image = os.path.join(img_dir, row['img_name'])  # Combine img_dir with the image name
             st.image(image, caption=f"Qs: {index}", use_column_width=True)
 
         if st.button(f"Show Correct Answer #{index}"):

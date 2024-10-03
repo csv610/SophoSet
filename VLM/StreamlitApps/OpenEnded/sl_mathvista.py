@@ -43,8 +43,12 @@ def generate_options(choices):
     """Generate formatted options from choices."""
     return [f"({chr(65 + i)}) {choice}" for i, choice in enumerate(choices)]
 
-def ask_vlm(question, options, image, index):
-    
+def ask_vlm(params):
+    question = params['question']
+    options = params['options']
+    image = params['image']
+    index = params['index']
+
     # Use a button to trigger the answer retrieval
     if st.button(f"Ask VLM : {index}"):
         vlm = load_vlm_model()
@@ -78,7 +82,14 @@ def process_question(row: dict, index: int):
     if row['answer'] and st.button(f"{HUMAN_ANSWER_BUTTON}{index}"):
         st.write(row['answer'])
 
-    ask_vlm(row['question'], options, image, index)
+    # Prepare a dictionary with the required parameters
+    params = {
+        "question": row['question'],
+        "options": options,
+        "image": image,
+        "index": index
+    }
+    ask_vlm(params)  # Pass the dictionary to the function
     st.divider()
 
 def config_panel():

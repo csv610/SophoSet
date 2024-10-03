@@ -25,7 +25,12 @@ def build_prompt(question, options=None):
         prompt = f"You are an expert in medical diagnosis. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
-def ask_vlm(question, options, image, index):
+def ask_vlm(params):
+    question = params["question"]
+    options = params["options"]
+    image = params["image"]
+    index = params["index"]
+
     # Use a button to trigger the answer retrieval
     if st.button(f"Ask VLM : {index}"):
         vlm = load_vlm_model()
@@ -62,7 +67,13 @@ def process_question(row, img_dir, index):
         if st.button(f"Show Correct Answer #{index}"):
             st.write(row['answer'])
 
-        ask_vlm(question, None, image, index)
+        vlm_params = {
+            "question": question,
+            "options": None,  # Set options to None
+            "image": image,
+            "index": index
+        }
+        ask_vlm(vlm_params)  # Pass vlm_params as a single argument
 
         st.divider()
     

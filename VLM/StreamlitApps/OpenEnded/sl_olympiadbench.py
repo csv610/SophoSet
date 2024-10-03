@@ -27,8 +27,13 @@ def build_prompt(question, options=None):
         prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
-def ask_vlm(question, options, image, index):
+def ask_vlm(params):
     """Retrieve an answer from the VLM model."""
+    question = params['question']
+    options = params['options']
+    image = params['images']
+    index = params['index']
+
     if st.button(f"Ask VLM : {index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
@@ -60,7 +65,17 @@ def process_question(row, index):
         except Exception as e:
             st.write(f"Unable to load image: {e}")
 
-    ask_vlm(question, None, images, index)
+    options = None
+
+    # Create a dictionary to hold the parameters
+    params = {
+        "question": question,
+        "options": None,  # Assuming options is still None
+        "images": images,
+        "index": index
+    }
+    
+    ask_vlm(**params)  # Unpack the dictionary to pass as arguments
     st.divider()
 
 # Streamlit app

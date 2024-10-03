@@ -1,4 +1,3 @@
-
 import time 
 
 import streamlit as st
@@ -30,7 +29,12 @@ def build_prompt(question, options=None):
         prompt = f"You are an expert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
-def ask_vlm(question, options, image, index):
+def ask_vlm(params):  # Accept a single dictionary parameter
+    question = params["question"]
+    options = params["options"]
+    image = params["image"]
+    index = params["index"]
+
     # Use a button to trigger the answer retrieval
     if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
@@ -42,13 +46,13 @@ def ask_vlm(question, options, image, index):
             try:
                 answer = vlm.get_answer(prompt, image)  # Pass the byte stream
                 elapsed_time = time.time() - start_time  # Calculate elapsed time
-                st.write(f"Model answer #{answer}")
+                st.write(f"Model answer: {answer}")
                 st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
             except Exception as e:
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
-                st.session_state.processing = False 
-                
+                st.session_state.processing = False  # Reset processing state
+
 def config_panel():
     config = {
         "dataset": None,
@@ -94,10 +98,15 @@ def process_question(row, index):
         answer = row['Answer']
         st.write(answer)
 
-    ask_vlm(question, None, image, index)
+    vlm_params = {
+        "question": question,
+        "options": None,  # Set options to None
+        "image": image,
+        "index": index
+    }
+    ask_vlm(vlm_params)  # Pass vlm_params as a single argument
 
     st.divider()  # Divider between items
-
 
 # Streamlit app
 def process_dataset():   

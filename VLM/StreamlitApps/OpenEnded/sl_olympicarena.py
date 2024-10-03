@@ -1,4 +1,3 @@
-
 import time 
 
 import streamlit as st
@@ -35,7 +34,12 @@ def build_prompt(question, options=None):
         prompt = f"You are an expoert in mathematics. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
-def ask_vlm(question, options, image, index):
+def ask_vlm(params): 
+    question = params["question"]
+    options = params["options"]
+    image = params["image"]
+    index = params["index"]
+
     # Use a button to trigger the answer retrieval
     if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
@@ -73,7 +77,7 @@ def config_panel():
         return config 
 
     dataset = dataset['test'] 
-    
+
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
     total_items = len(dataset)
     total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
@@ -115,7 +119,15 @@ def process_question(row, index):
             except Exception as e:
                 st.write(f"Unable to load image from {url}: {e}")
 
-    ask_vlm(question, None, image, index)
+    options = None
+
+    vlm_params = {
+        "question": question,
+        "options": {},  # Define options as a dictionary
+        "image": image,
+        "index": index
+    }
+    ask_vlm(**vlm_params)  # Unpack vlm_params when calling ask_vlm
     st.divider()
 
 def process_dataset():

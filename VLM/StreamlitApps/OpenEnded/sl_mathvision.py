@@ -57,13 +57,16 @@ def config_panel():
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
     # Display questions for the selected page
-    param['start_index'] = (selected_page - 1) * num_questions_per_page
-    param['end_index'] = min(start_index + num_questions_per_page, total_questions)
+    start_index = (selected_page - 1) * num_questions_per_page
+    end_index   = min(start_index + num_questions_per_page, total_questions)
 
     # Cancel button to stop processing
     if st.session_state.processing and st.sidebar.button("Cancel"):
         st.session_state.processing = False  # Logic to cancel the process
         st.warning("Processing canceled.")
+
+    param['start_index'] = start_index
+    param['end_index']   = end_index
 
     return param
 

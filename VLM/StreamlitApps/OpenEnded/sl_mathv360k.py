@@ -91,7 +91,12 @@ def process_question(row, index, image_folder):
 
     st.write(question)
 
-    image = image_folder + "/" + row['image']
+    # Check if the image folder exists
+    if not os.path.exists(image_folder):
+        st.error(f"Image folder does not exist. Please check the path: {image_folder}.")
+        return  # Exit the function if the folder does not exist
+
+    image = os.path.join(image_folder, row['image'])  # Use os.path.join for better path handling
     
     # Check if the image was loaded successfully
     if image is not None:

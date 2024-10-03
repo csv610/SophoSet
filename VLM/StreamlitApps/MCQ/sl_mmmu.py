@@ -160,14 +160,15 @@ def process_question(row, subject, index):
 
 def process_dataset():
 
-    config = config_panel()  # Call config_panel and store the returned dictionary
+    config = config_panel() 
+
     dataset = config["dataset"]
     
     if dataset is None:
         st.error("Dataset could not be loaded. Please try again.")
         return
     
-    subject = config["subject"]  # Assuming 'subject' is also included in the config
+    subject = config["subject"] 
     start_index = config["start_index"]
     end_index = config["end_index"]
 

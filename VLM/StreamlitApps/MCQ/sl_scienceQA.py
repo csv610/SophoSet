@@ -74,7 +74,7 @@ def config_panel():
         config["start_index"] = start_index
         config["end_index"] = end_index
 
-    return config  # Return the config dictionary
+    return config
 
 def process_question(row, index):
     st.header(f"Question #{index}")

@@ -68,26 +68,30 @@ def ask_vlm(question, options, image, index):
             finally:
                 st.session_state.processing = False  # Reset processing state
 
-def extract_question_answer(conversation_list):
+def extract_data(conversation_list):
     question = None
     answer = None
+    options = None 
     
     for entry in conversation_list:
         if entry["from"] == "human":
-            # Extract question from the human's message
+            # Extract question and options from the human's message
             if "Question:" in entry["value"]:
-                question = entry["value"].split("Question:")[-1].strip()
-        
+                question_part = entry["value"].split("Question:")[-1].strip()
+                question, options_part = question_part.split("Choices:") if "Choices:" in question_part else (question_part, None)
+                if options_part:
+                    options = [opt.strip() for opt in options_part.split("\n") if opt.strip()]  # Parse options
+            
         elif entry["from"] == "gpt":
             # Extract answer from the GPT's message
             answer = entry["value"].strip()
     
-    return question, answer
+    return question, options, answer  # Return options along with question and answer
 
 def process_question(row, index, image_folder):
     st.header(f"Question: {index + 1}")
 
-    question, answer = extract_question_answer(row['conversations'])
+    question, options, answer = extract_data(row['conversations'])
 
     st.write(question)
 
@@ -96,7 +100,11 @@ def process_question(row, index, image_folder):
         st.error(f"Image folder does not exist. Please check the path: {image_folder}.")
         return  # Exit the function if the folder does not exist
 
-    image = os.path.join(image_folder, row['image'])  # Use os.path.join for better path handling
+    image = os.path.join(image_folder, row['image'])
+
+    if options:
+        for opt in options:
+            st.write(opt)
     
     # Check if the image was loaded successfully
     if image is not None:

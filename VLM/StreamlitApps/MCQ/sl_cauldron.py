@@ -145,15 +145,15 @@ def process_question(row, qindex):
 
 def process_dataset():
 
-    config = config_panel()  # Call config_panel and store the returned dictionary
-    dataset = config["dataset"]
-    start_index = config["start_index"]
-    end_index = config["end_index"]
+    config = config_panel() 
 
+    dataset = config["dataset"]
     if dataset is None:
         st.error("Dataset could not be loaded. Please try again.")
         return
 
+    start_index = config["start_index"]
+    end_index = config["end_index"]
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)
 

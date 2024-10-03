@@ -61,7 +61,7 @@ def config_panel():
         return config  # Return the initial config if dataset is None
 
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    total_items = len(dataset['test'])  # Assuming you want the 'test' split
+    total_items = len(dataset)  # Assuming you want the 'test' split
     total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
 
     page_options = list(range(1, total_pages + 1))
@@ -74,7 +74,7 @@ def config_panel():
     config["start_index"] = start_index
     config["end_index"] = end_index
 
-    return config  # Return the updated config dictionary
+    return config  
 
 def process_question(row, index):
     st.header(f"Question #{index}")
@@ -82,7 +82,6 @@ def process_question(row, index):
     # Display question and answer
     question = row['Question']
     st.write(question)
-    st.write("")  # Add vertical space
 
     image = None
     if row['Picture']:
@@ -101,6 +100,7 @@ def process_question(row, index):
 # Streamlit app
 def process_dataset():   
     config = config_panel()  # Get the config as a dictionary
+
     dataset = config["dataset"]
    
     if dataset is None:  # Check if dataset is None

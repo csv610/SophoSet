@@ -46,9 +46,7 @@ def config_panel():
         config["start_index"] = start_index
         config["end_index"] = end_index
 
-        return config  # Return the config dictionary
-    
-    return config  # Return the initialized config if dataset is None
+    return config 
 
 @st.cache_resource
 def load_vlm_model():

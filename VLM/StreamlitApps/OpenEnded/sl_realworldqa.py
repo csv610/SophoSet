@@ -4,7 +4,7 @@ from typing import Tuple, List, Optional
 
 import streamlit as st
 from datasets import load_dataset
-from vlm_chat import LlavaChat
+from vlm_chat import LlavaModel
 
 st.set_page_config(layout="wide")
 
@@ -20,7 +20,7 @@ def load_data(split: str = "test"):
     
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options):

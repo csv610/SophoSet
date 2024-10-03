@@ -7,7 +7,7 @@ from PIL import Image
 import streamlit as st
 from langchain_community.llms import Ollama
 
-class LlavaChat:
+class LlavaModel:
     def __init__(self, model_name: str = "llava:latest", base_url: str = "http://localhost:11434"):
         self.model_name = model_name
         self.base_url = base_url
@@ -89,7 +89,7 @@ def main():
     st.set_page_config(page_title="LLaVA Chat", page_icon="🖼️")
     st.title("LLaVA Chat")
 
-    llm = LlavaChat()
+    llm = LlavaModel()
 
     input_type = st.radio("Choose input type:", ["File Upload", "Encoded Image String"])
 

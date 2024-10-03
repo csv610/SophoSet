@@ -4,7 +4,7 @@ import os
 from PIL import Image
 import streamlit as st
 from datasets import load_dataset
-from vlm_chat import LlavaChat
+from vlm_chat import LlavaModel
 
 st.set_page_config(layout="wide")
 
@@ -39,7 +39,7 @@ def display_conversation(conversation_list):
 
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

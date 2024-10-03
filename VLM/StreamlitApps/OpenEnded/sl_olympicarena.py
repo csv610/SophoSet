@@ -1,10 +1,12 @@
+
+import time 
+
 import streamlit as st
 from datasets import load_dataset
 from PIL import Image
 import requests
 from io import BytesIO
-from vlm_chat import LlavaChat
-import time 
+from vlm_chat import LlavaModel
 from langdetect import detect, DetectorFactory
 DetectorFactory.seed = 0  # For consistent results
 
@@ -23,7 +25,7 @@ def load_image(image_url):
 
 @st.cache_resource 
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 from datasets import load_dataset
 import streamlit as st
-from vlm_chat import LlavaChat
+from vlm_chat import LlavaModel
 
 def check_hf_home_permissions():
     hf_home = os.getenv("HF_HOME")
@@ -42,7 +42,7 @@ def load_data():
 
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

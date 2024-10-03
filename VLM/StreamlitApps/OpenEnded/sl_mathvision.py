@@ -1,7 +1,9 @@
+
+import time  
+
 import streamlit as st
 from datasets import load_dataset
-from vlm_chat import LlavaChat
-import time  # Ensure to import time at the top of the file
+from vlm_chat import LlavaModel
 
 # Constants
 MODEL_NAME = "MathLLMs/MathVision"
@@ -72,7 +74,7 @@ def config_panel():
 
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

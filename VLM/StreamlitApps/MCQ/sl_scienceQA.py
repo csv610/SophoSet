@@ -3,7 +3,7 @@ from io import BytesIO
 
 import streamlit as st
 from datasets import load_dataset
-from vlm_chat import LlavaChat
+from vlm_chat import LlavaModel
 
 # Load the dataset
 @st.cache_data()
@@ -14,7 +14,7 @@ def load_data(split = 'train'):
 
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

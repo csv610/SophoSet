@@ -5,7 +5,7 @@ from io import BytesIO
 import streamlit as st
 from PIL import Image
 from datasets import load_dataset
-from vlm_chat import LlavaChat
+from vlm_chat import LlavaModel
 
 st.set_page_config(layout="wide")
 
@@ -52,7 +52,7 @@ def load_data(subset, split):
 
 @st.cache_resource
 def load_vlm_model():
-    vlm = LlavaChat()
+    vlm = LlavaModel()
     return vlm
 
 def build_prompt(question, options=None):

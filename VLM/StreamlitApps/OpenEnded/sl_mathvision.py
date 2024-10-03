@@ -32,18 +32,24 @@ def config_panel():
     # Select subset
     split = st.sidebar.selectbox("Select Dataset Subset", options=['test', 'testmini'])
 
+    param = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
+
     # Load dataset
-    dataset = load_data(split)
+    param["dataset"] = load_data(split)  # Store the loaded dataset in the param dictionary
     
-    if dataset is None:
+    if param["dataset"] is None:
         st.warning("Unable to load dataset. Please try again later.")
-        return
+        return config  # Return the initialized dictionary
 
     # Select number of questions per page
     num_questions_per_page = st.sidebar.slider("Select Number of Questions per Page", min_value=1, max_value=10, value=DEFAULT_NUM_QUESTIONS)
     
     # Calculate total pages
-    total_questions = len(dataset)
+    total_questions = len(param["dataset"])
     total_pages = (total_questions // num_questions_per_page) + 1
 
     # Page selection box
@@ -51,15 +57,15 @@ def config_panel():
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
     # Display questions for the selected page
-    start_index = (selected_page - 1) * num_questions_per_page
-    end_index = min(start_index + num_questions_per_page, total_questions)
+    param['start_index'] = (selected_page - 1) * num_questions_per_page
+    param['end_index'] = min(start_index + num_questions_per_page, total_questions)
 
     # Cancel button to stop processing
     if st.session_state.processing and st.sidebar.button("Cancel"):
         st.session_state.processing = False  # Logic to cancel the process
         st.warning("Processing canceled.")
 
-    return dataset, start_index, end_index
+    return param
 
 @st.cache_resource
 def load_vlm_model():
@@ -75,7 +81,7 @@ def build_prompt(question, options=None):
 
 def ask_vlm(question: str, options: list, image, index: int):
     # Use a button to trigger the answer retrieval
-    if st.button(f"Ask VLM : {index}"):
+    if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
         prompt = build_prompt(question, options)
             
@@ -109,7 +115,7 @@ def process_question(row, index):
         st.write(options)
 
     if row['answer']:
-        if st.button(f"Correct Answer: {index}"):
+        if st.button(f"Correct Answer #{index}"):
             st.write(row['answer'])
         
     ask_vlm(question, options, image, index)
@@ -118,11 +124,16 @@ def process_question(row, index):
   
 # Streamlit app
 def process_dataset():
-    dataset, start_index, end_index = config_panel()
+    config = config_panel()
+
+    dataset = config["dataset"]
     
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")
         return  # Exit the function if dataset is not loaded
+
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)

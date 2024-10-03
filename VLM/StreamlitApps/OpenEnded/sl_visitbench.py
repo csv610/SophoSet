@@ -1,11 +1,34 @@
 import time 
 import requests
+import os
 
 from io import BytesIO
 from PIL import Image
 from datasets import load_dataset
 import streamlit as st
 from vlm_chat import LlavaChat
+
+def check_hf_home_permissions():
+    hf_home = os.getenv("HF_HOME")
+    
+    # If HF_HOME is not defined, skip the permission check
+    if hf_home is None:
+        return True
+
+    # Check if the directory exists
+    if not os.path.exists(hf_home):
+        st.error(f"HF_HOME directory '{hf_home}' does not exist.")
+        return False
+
+    # Check read and write permissions
+    if not os.access(hf_home, os.R_OK):
+        st.error(f"HF_HOME directory '{hf_home}' is not readable.")
+        return False
+    if not os.access(hf_home, os.W_OK):
+        st.error(f"HF_HOME directory '{hf_home}' is not writable.")
+        return False
+
+    return True
 
 # Load the dataset
 @st.cache_data()
@@ -51,28 +74,41 @@ def ask_vlm(question, options, image, index):
 
 # Streamlit app
 def config_panel():
-    # Load dataset
-    dataset = load_data()
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
 
-    # Sidebar for navigation
     st.sidebar.title("VisIT-Bench")
 
-    # Select number of items per page
-    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
-    # Calculate total pages
-    total_items = len(dataset)
-    total_pages = (total_items // num_items_per_page) + 1
+    if os.getenv("HF_HOME") is not None:  # Check if HF_HOME exists
+        if check_hf_home_permissions():
+            dataset = load_data()
+        else:
+            dataset = None  # Handle the case where permissions are not granted
+    else:
+        dataset = load_data()  # default location of dataset
 
-    # Page selection box
+    if dataset is None:
+        st.error("Dataset could not be loaded. Please try again.")
+        return config  # Return the initial config if dataset is None
+
+    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
+    total_items = len(dataset)  # Assuming you want to use the entire dataset
+    total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
+
     page_options = list(range(1, total_pages + 1))
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    return dataset, start_index, end_index
+    config["dataset"] = dataset  # Update the config with the loaded dataset
+    config["start_index"] = start_index
+    config["end_index"] = end_index
+
+    return config  # Return the updated config dictionary
 
 def process_question(row, index):
     st.header(f"Question #{index}")
@@ -89,7 +125,10 @@ def process_question(row, index):
     st.divider()
 
 def process_dataset():
-    dataset, start_index, end_index = config_panel()
+    config = config_panel()  # Get the config as a dictionary
+    dataset = config["dataset"]
+    start_index = config["start_index"]
+    end_index = config["end_index"]
     
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")

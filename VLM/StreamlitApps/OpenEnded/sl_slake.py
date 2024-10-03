@@ -64,42 +64,58 @@ def process_question(row, img_dir, index):
         st.divider()
     
 def config_panel():
-    # Load dataset
-    dataset = load_data()
-    split = "train"
-    dataset = dataset[split]
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0,
+        "img_dir": ""  # Initialize img_dir
+    }
 
-    # Sidebar for navigation
     st.sidebar.title("SLAKE")
+    dataset = load_data()  # Load the dataset
+    if dataset is None:
+        st.error("Dataset could not be loaded. Please try again.")
+        return config  # Return the initial config if dataset is None
 
-    # Ask for image folder
+    split = "train"  # Assuming you want to use the 'train' split
+    if split in dataset:
+        dataset = dataset[split]
+    else:
+        st.error("Dataset does not contain the specified split. Please try again.")
+        return config  # Return the initial config if split is not found
+
     img_dir = st.sidebar.text_input("Enter Image Folder Path", "../../images/slake")  # Default folder path
-    img_dir = os.path.abspath(img_dir)  # Convert to absolute path
+    config["img_dir"] = os.path.abspath(img_dir)  # Update img_dir in config
 
-    # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
-    # Calculate total pages
     total_items = len(dataset)
-    total_pages = (total_items // num_items_per_page) + 1
+    total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
 
-    # Page selection box
     page_options = list(range(1, total_pages + 1))
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    # Display items for the selected page
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    return dataset, start_index, end_index, img_dir
+    config["dataset"] = dataset  # Update the config with the loaded dataset
+    config["start_index"] = start_index
+    config["end_index"] = end_index
+
+    return config  # Return the updated config dictionary
 
 # Streamlit app
 def process_dataset():
-    dataset, start_index, end_index, img_dir = config_panel()
+    config = config_panel()
     
+    dataset = config["dataset"]
+
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")
         return  # Exit the function if dataset is not loaded
+    
+    start_index = config["start_index"]
+    end_index = config["end_index"]
+    img_dir = config["img_dir"]  #
 
     for i in range(start_index, end_index):
         process_question(dataset[i], img_dir, i + 1)

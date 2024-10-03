@@ -65,26 +65,44 @@ def process_question(row, index):
 # Streamlit app
 def config_panel():
     st.sidebar.title("OlympiadBench")
+
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
+
     split = st.sidebar.selectbox("Select Split", ["test_en", "test_cn"])
+
     dataset = load_data(split)
+    config["dataset"] = dataset  # Update the config with the loaded dataset
 
-    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    total_items = len(dataset)
-    total_pages = (total_items + num_items_per_page - 1) // num_items_per_page  # Improved page calculation
+    if dataset:
+        num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
+        total_items = len(dataset)
+        total_pages = (total_items + num_items_per_page - 1) // num_items_per_page  # Improved page calculation
 
-    page_options = list(range(1, total_pages + 1))
-    selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
+        page_options = list(range(1, total_pages + 1))
+        selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    start_index = (selected_page - 1) * num_items_per_page
-    end_index = min(start_index + num_items_per_page, total_items)
-    return dataset, start_index, end_index
+        start_index = (selected_page - 1) * num_items_per_page
+        end_index = min(start_index + num_items_per_page, total_items)
+        config["start_index"] = start_index  # Update start_index in config
+        config["end_index"] = end_index      # Update end_index in config
+
+    return config  # Return the updated config
 
 def process_dataset():
-    dataset, start_index, end_index = config_panel()
+    config = config_panel()
     
-    if dataset is None:  # Check if dataset is None
+    dataset = config['dataset']
+    
+    if dataset is None: 
         st.error("Dataset could not be loaded. Please try again.")
-        return  # Exit the function if dataset is not loaded
+        return 
+    
+    start_index = config['start_index']
+    end_index = config['end_index']
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i + 1)

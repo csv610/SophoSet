@@ -50,31 +50,36 @@ def ask_vlm(question, options, image, index):
                 st.session_state.processing = False  # Reset processing state
     
 
-def config_panel() -> Tuple[Optional[dict], int, int]:
-    """Handle the contents of the left panel (sidebar)."""
+def config_panel() -> dict:
+
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
+
     st.sidebar.title("RealworldQA")
 
-    # Load dataset
-    dataset = load_data()
+    dataset = load_data() 
     if dataset is None:
-        return None, 0, 0, 0, 0
+        st.error("Dataset could not be loaded. Please try again.")
+        return config  # Return the initial config if dataset is None
 
-    # Select number of items per page
     num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
-    # Calculate total pages
     total_items = len(dataset)
-    total_pages = (total_items // num_items_per_page) + (1 if total_items % num_items_per_page != 0 else 0)
+    total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
 
-    # Page selection box
     page_options = list(range(1, total_pages + 1))
     selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    # Calculate start and end index
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    return dataset, start_index, end_index
+    config["dataset"] = dataset  # Update the config with the loaded dataset
+    config["start_index"] = start_index
+    config["end_index"] = end_index
+
+    return config
 
 def split_text(text: str) -> Tuple[str, List[str]]:
     """Split the text into question and options."""
@@ -117,11 +122,15 @@ def process_question(row: dict, index):
     st.divider()
 
 def process_dataset():
-    dataset, start_index, end_index = config_panel()
-    
+    config = config_panel()  
+    dataset = config["dataset"]
+
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")
         return  # Exit the function if dataset is not loaded
+    
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i + 1)

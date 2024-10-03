@@ -1,4 +1,3 @@
-
 import time 
 
 import streamlit as st
@@ -83,71 +82,83 @@ def process_question(row: dict, index: int):
     st.divider()
 
 def config_panel():
-
     st.sidebar.title("MathVista")
 
-    # Sidebar for all the settings
+    # Initialize the dictionary to hold the return values
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
+
     # Select the dataset split
     opt_split = st.sidebar.selectbox("Select dataset split", ["test", "testmini"])
 
     # Load the dataset
     dataset = load_dataset("AI4Math/MathVista", split=opt_split)
+    config["dataset"] = dataset  # Store the loaded dataset
 
     # Select the question type
     opt_question_type = st.sidebar.selectbox("Select question type", ["all", "multi_choice", "free_form"])
 
     # Filter the dataset based on the selected question type
     if opt_question_type != "all":
-        dataset = dataset.filter(lambda x: x['question_type'] == opt_question_type)
+        config["dataset"] = config["dataset"].filter(lambda x: x['question_type'] == opt_question_type)
 
     # Select the category
     opt_category = st.sidebar.selectbox("Select category", ["all", "math-targeted-vqa", "general-vqa"])
 
     # Filter the dataset based on the selected category
     if opt_category != "all":
-        dataset = dataset.filter(lambda x: x['metadata']['category'] == opt_category)
+        config["dataset"] = config["dataset"].filter(lambda x: x['metadata']['category'] == opt_category)
 
     # Select the grade level
     opt_grade = st.sidebar.selectbox("Select grade level", ["all", "elementary school", "high school", "college", "not applicable"])
 
     # Filter the dataset based on the selected grade level
     if opt_grade != "all":
-        dataset = dataset.filter(lambda x: x['metadata']['grade'].lower() == opt_grade.lower())
+        config["dataset"] = config["dataset"].filter(lambda x: x['metadata']['grade'].lower() == opt_grade.lower())
 
     # Update the selectbox to use the constant
     opt_context = st.sidebar.selectbox("Select context", CONTEXT_OPTIONS)
 
     # Filter the dataset based on the selected context
     if opt_context != "all":
-        dataset = dataset.filter(lambda x: x['metadata']['context'].lower() == opt_context.lower())
+        config["dataset"] = config["dataset"].filter(lambda x: x['metadata']['context'].lower() == opt_context.lower())
 
-    
     # Update the selectbox to use the constant
     opt_skill = st.sidebar.selectbox("Select Skill", SKILL_OPTIONS)
 
     # Filter the dataset based on the selected skill
     if opt_skill != "all":
-        dataset = dataset.filter(lambda x: opt_skill.lower() in [skill.lower() for skill in x['metadata']['skills']])
+        config["dataset"] = config["dataset"].filter(lambda x: opt_skill.lower() in [skill.lower() for skill in x['metadata']['skills']])
 
-    # Select number of items per page
-    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
-    # Calculate total pages
-    total_items = len(dataset)
-    total_pages = (total_items // num_items_per_page) + 1
+    if config["dataset"] is not None:  # Check if the dataset is valid
+        num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
+        
+        # Calculate total pages
+        total_items = len(config["dataset"])
+        total_pages = (total_items // num_items_per_page) + (1 if total_items % num_items_per_page != 0 else 0)
 
-    # Page selection box
-    page_options = list(range(1, total_pages + 1))
-    selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
+        # Page selection box
+        page_options = list(range(1, total_pages + 1))
+        selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
 
-    # Display items for the selected page
-    start_index = (selected_page - 1) * num_items_per_page
-    end_index = min(start_index + num_items_per_page, total_items)
+        # Calculate start and end index
+        start_index = (selected_page - 1) * num_items_per_page
+        end_index = min(start_index + num_items_per_page, total_items)
 
-    return dataset, start_index, end_index
+        # Update the config dictionary with actual values
+        config["start_index"] = start_index
+        config["end_index"] = end_index
+
+    return config  # Return the config dictionary
 
 def process_dataset():
-    dataset, start_index, end_index = config_panel()
+    config = config_panel()  # Call config_panel and store the returned dictionary
+    dataset = config["dataset"]
+    start_index = config["start_index"]
+    end_index = config["end_index"]
     
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")

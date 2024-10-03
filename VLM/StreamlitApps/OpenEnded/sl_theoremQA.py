@@ -100,11 +100,12 @@ def process_question(row, index):
 
     vlm_params = {
         "question": question,
-        "options": None,  # Set options to None
+        "options": None, 
         "image": image,
         "index": index
     }
-    ask_vlm(vlm_params)  # Pass vlm_params as a single argument
+
+    ask_vlm(vlm_params)  
 
     st.divider()  # Divider between items
 

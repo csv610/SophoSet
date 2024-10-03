@@ -123,12 +123,12 @@ def process_question(row, index, image_folder):
     # Create a dictionary to hold the parameters
     vlm_params = {
         "question": question,
-        "options": None,  # Assuming options is None
+        "options": None,
         "image": image,
         "index": index
     }
     
-    ask_vlm(vlm_params)  # Pass the dictionary to the function
+    ask_vlm(vlm_params) 
 
 def config_panel():
     st.sidebar.title("MathV360K")
@@ -169,9 +169,9 @@ def config_panel():
 
     return config
 
-# Streamlit app
 def process_dataset():
     config = config_panel()
+    
     dataset = config["dataset"]
     
     if dataset is None:  # Check if dataset is None

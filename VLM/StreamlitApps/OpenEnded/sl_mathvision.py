@@ -33,16 +33,16 @@ def config_panel():
     # Select subset
     split = st.sidebar.selectbox("Select Dataset Subset", options=['test', 'testmini'])
 
-    param = {
+    config = {  # Changed from param to config
         "dataset": None,
         "start_index": 0,
         "end_index": 0
     }
 
     # Load dataset
-    param["dataset"] = load_data(split)  # Store the loaded dataset in the param dictionary
+    config["dataset"] = load_data(split)  # Store the loaded dataset in the config dictionary
     
-    if param["dataset"] is None:
+    if config["dataset"] is None:
         st.warning("Unable to load dataset. Please try again later.")
         return config  # Return the initialized dictionary
 
@@ -50,7 +50,7 @@ def config_panel():
     num_questions_per_page = st.sidebar.slider("Select Number of Questions per Page", min_value=1, max_value=10, value=DEFAULT_NUM_QUESTIONS)
     
     # Calculate total pages
-    total_questions = len(param["dataset"])
+    total_questions = len(config["dataset"])
     total_pages = (total_questions // num_questions_per_page) + 1
 
     # Page selection box
@@ -66,10 +66,10 @@ def config_panel():
         st.session_state.processing = False  # Logic to cancel the process
         st.warning("Processing canceled.")
 
-    param['start_index'] = start_index
-    param['end_index']   = end_index
+    config['start_index'] = start_index
+    config['end_index']   = end_index
 
-    return param
+    return config
 
 @st.cache_resource
 def load_vlm_model():

@@ -42,10 +42,10 @@ def ask_vlm(params):
         with st.spinner("Retrieving answer..."):
             start_time = time.time()  # Start the timer
             try:
-                answer = vlm.get_answer(prompt, image)  # Pass the byte stream
-                elapsed_time = time.time() - start_time  # Calculate elapsed time
+                answer = vlm.get_answer(prompt, image) 
+                elapsed_time = time.time() - start_time 
                 st.write(f"Model answer: {answer}")
-                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds") 
             except Exception as e:
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
@@ -65,8 +65,6 @@ def process_question(row, index):
         except Exception as e:
             st.write(f"Unable to load image: {e}")
 
-    options = None
-
     # Create a dictionary to hold the parameters
     params = {
         "question": question,
@@ -75,10 +73,10 @@ def process_question(row, index):
         "index": index
     }
     
-    ask_vlm(**params)  # Unpack the dictionary to pass as arguments
+    ask_vlm(params) 
+
     st.divider()
 
-# Streamlit app
 def config_panel():
     st.sidebar.title("OlympiadBench")
 
@@ -106,7 +104,7 @@ def config_panel():
         config["start_index"] = start_index  # Update start_index in config
         config["end_index"] = end_index      # Update end_index in config
 
-    return config  # Return the updated config
+    return config 
 
 def process_dataset():
     config = config_panel()

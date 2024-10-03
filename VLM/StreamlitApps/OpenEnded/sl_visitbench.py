@@ -76,7 +76,6 @@ def ask_vlm(params):
             finally:
                 st.session_state.processing = False  # Reset processing state
     
-# Streamlit app
 def config_panel():
     config = {
         "dataset": None,
@@ -108,11 +107,11 @@ def config_panel():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    config["dataset"] = dataset  # Update the config with the loaded dataset
+    config["dataset"] = dataset 
     config["start_index"] = start_index
     config["end_index"] = end_index
 
-    return config  # Return the updated config dictionary
+    return config 
 
 def process_question(row, index):
     st.header(f"Question #{index}")
@@ -127,23 +126,27 @@ def process_question(row, index):
        
     vlm_params = {
         "question": question,
-        "options": None,  # Set options to None
+        "options": None, 
         "image": image,
         "index": index
     }
-    ask_vlm(vlm_params)  # Pass vlm_params as a single argument
+
+    ask_vlm(vlm_params) 
+
     st.divider()
 
 def process_dataset():
-    config = config_panel()  # Get the config as a dictionary
+
+    config = config_panel() 
+
     dataset = config["dataset"]
-    start_index = config["start_index"]
-    end_index = config["end_index"]
     
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")
         return  # Exit the function if dataset is not loaded
 
+    start_index = config["start_index"]
+    end_index = config["end_index"]
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)
         

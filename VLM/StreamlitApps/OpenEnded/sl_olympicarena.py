@@ -58,9 +58,7 @@ def ask_vlm(params):
             finally:
                 st.session_state.processing = False  # Reset processing state
 
-# Streamlit app
-def config_panel():
-
+def config_panel() -> dict:
     st.sidebar.title("OlympicArena")
 
     config = {
@@ -92,7 +90,7 @@ def config_panel():
     config["start_index"] = start_index
     config["end_index"] = end_index
 
-    return config  # Return the updated config dictionary
+    return config
 
 def process_question(row, index):
     st.header(f"Question #{index}")
@@ -119,15 +117,15 @@ def process_question(row, index):
             except Exception as e:
                 st.write(f"Unable to load image from {url}: {e}")
 
-    options = None
-
     vlm_params = {
         "question": question,
-        "options": {},  # Define options as a dictionary
+        "options": None, 
         "image": image,
         "index": index
     }
-    ask_vlm(**vlm_params)  # Unpack vlm_params when calling ask_vlm
+
+    ask_vlm(vlm_params) 
+    
     st.divider()
 
 def process_dataset():

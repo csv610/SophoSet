@@ -103,7 +103,7 @@ def split_text(text: str) -> Tuple[str, List[str]]:
     return question, options
 
 def process_question(row: dict, index):
-    """Display a single question with its image and answer."""
+    
     st.header(f"Question #{index}")
 
     question, options = split_text(row['question'])
@@ -128,7 +128,8 @@ def process_question(row: dict, index):
         "image": image,
         "index": index
     }
-    ask_vlm(vlm_params)  # Pass vlm_params as a single argument
+
+    ask_vlm(vlm_params)
 
     st.divider()
 

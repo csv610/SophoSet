@@ -18,7 +18,7 @@ def load_data(subject):
        return None
     
 def config_panel():
-    st.sidebar.title("AI2D")
+    st.sidebar.title("Cauldron")
 
     # Initialize the dictionary to hold the return values
     config = {
@@ -28,7 +28,17 @@ def config_panel():
     }
 
     # Load dataset
-    dataset = load_data("your_subject_here")  # Replace with actual subject if needed
+    subject_options = ['ai2d', 'aokvqa', 'chart2text', 'chartqa', 'clevr', 'clevr_math', 'cocoqa', 'datikz', 
+                       'diagram_image_to_text', 'docvqa', 'dvqa', 'figureqa', 'finqa', 'geomverse', 
+                       'hateful_memes', 'hitab', 'iam', 'iconqa', 'infographic_vqa', 'intergps', 
+                       'localized_narratives', 'mapqa', 'mimic_cgd', 'multihiertt', 'nlvr2', 'ocrvqa', 
+                       'okvqa', 'plotqa', 'raven', 'rendered_text', 'robut_sqa', 'robut_wikisql', 
+                       'robut_wtq', 'scienceqa', 'screen2words', 'spot_the_diff', 'st_vqa', 'tabmwp', 
+                       'tallyqa', 'tat_qa', 'textcaps', 'textvqa', 'tqa', 'vistext', 'visual7w', 
+                       'visualmrc', 'vqarad', 'vqav2', 'vsr', 'websight']
+    
+    subject = st.sidebar.selectbox("Select Subject", subject_options)  # Dropdown for subject selection
+    dataset = load_data(subject)  # Use selected subject
 
     if dataset:
         config["dataset"] = dataset  # Store the loaded dataset

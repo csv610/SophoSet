@@ -11,10 +11,10 @@ st.set_page_config(layout="wide")
 def load_data():
     try:
         ds = load_dataset("TIGER-Lab/TheoremQA")
+        return ds['test']
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
         return None  # Return None or handle as needed
-    return ds['test']
 
 @st.cache_resource
 def load_vlm_model():
@@ -70,7 +70,7 @@ def config_panel():
     start_index = (selected_page - 1) * num_items_per_page
     end_index = min(start_index + num_items_per_page, total_items)
 
-    config["dataset"] = dataset['test']  # Update the config with the loaded dataset
+    config["dataset"] = dataset 
     config["start_index"] = start_index
     config["end_index"] = end_index
 

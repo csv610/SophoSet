@@ -108,6 +108,9 @@ def process_question(row, index):
 
     ask_vlm(question, options, images, index)
 
+    st.divider()
+
+
 def config_panel():
 
     st.sidebar.title("BLINK")

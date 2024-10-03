@@ -85,7 +85,12 @@ def build_prompt(question, subject, options=None):
         prompt = f"You are an expert in {subject}. You are given a question '{question}' with the following options: {options}. Think step by step before answering the question and select the best option that answers the question as correctly as possible."
     return prompt
 
-def ask_vlm(question, subject, options, image, index):
+def ask_vlm(params):
+    question = params["question"]
+    subject = params["subject"]
+    options = params["options"]
+    images = params["images"] 
+    index = params["id"]
 
     if st.button(f"Ask VLM #{index}"):
         vlm = load_vlm_model()
@@ -95,10 +100,10 @@ def ask_vlm(question, subject, options, image, index):
         with st.spinner("Retrieving answer..."):
             start_time = time.time()  # Start the timer
             try:
-                answer = vlm.get_answer(prompt, image) 
-                elapsed_time = time.time() - start_time 
+                answer = vlm.get_answer(prompt, images)  # Pass the images list
+                elapsed_time = time.time() - start_time  # Calculate elapsed time
                 st.write(f"Model answer: {answer}")
-                st.write(f"Elapsed time: {elapsed_time:.3f} seconds") 
+                st.write(f"Elapsed time: {elapsed_time:.3f} seconds")  # Display elapsed time
             except Exception as e:
                 st.error(f"Error retrieving answer: {str(e)}")
             finally:
@@ -154,7 +159,16 @@ def process_question(row, subject, index):
         st.write(row['answer'])
         st.write("") 
 
-    ask_vlm(question, subject, options, images, index)
+    # Create a dictionary to hold the parameters
+    vlm_params = {
+        "question": question,
+        "subject": subject,
+        "options": options,
+        "images": images,  
+        "id": index
+    }
+    
+    ask_vlm(vlm_params)  # Pass the dictionary to the function
     
     st.divider()
 

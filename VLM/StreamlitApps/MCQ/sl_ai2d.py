@@ -21,6 +21,13 @@ def load_data(split):
 def config_panel():
     st.sidebar.title("AI2D")
 
+    # Initialize the dictionary to hold the return values
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
+
     dataset = load_data('test')
 
     if dataset:
@@ -34,9 +41,14 @@ def config_panel():
         start_index = (selected_page - 1) * num_items_per_page
         end_index = min(start_index + num_items_per_page, total_items)
 
-        return dataset, start_index, end_index
+        # Update the config dictionary with actual values
+        config["dataset"] = dataset
+        config["start_index"] = start_index
+        config["end_index"] = end_index
+
+        return config  # Return the config dictionary
     
-    return None, 0, 0
+    return config  # Return the initialized config if dataset is None
 
 @st.cache_resource
 def load_vlm_model():
@@ -101,11 +113,16 @@ def process_question(row, qindex):
 
 def process_dataset():
 
-    dataset, start_index, end_index = config_panel()
+    config = config_panel()
 
+    dataset = config["dataset"]
+   
     if dataset is None:
         st.error("Dataset could not be loaded. Please try again.")
         return
+    
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)

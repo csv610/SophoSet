@@ -112,8 +112,14 @@ def process_question(row, index):
 
 
 def config_panel():
-
     st.sidebar.title("BLINK")
+
+    # Initialize the dictionary to hold the return values
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0
+    }
 
     # Subset selection
     subset = st.sidebar.selectbox("Select Subset", SUBSETS)
@@ -122,32 +128,38 @@ def config_panel():
     split = st.sidebar.selectbox("Select Split", SPLITS)
 
     # Load dataset
-    dataset = load_data(subset, split)
+    config["dataset"] = load_data(subset, split)
 
-    if dataset:
+    if config["dataset"]:
         num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
     
         # Calculate total pages
-        total_items = len(dataset)
+        total_items = len(config["dataset"])
         total_pages = (total_items // num_items_per_page) + (1 if total_items % num_items_per_page != 0 else 0)
 
         selected_page = st.sidebar.selectbox("Select Page Number", options=range(1, total_pages + 1))
 
-    # Calculate start and end index
+        # Calculate start and end index
         start_index = (selected_page - 1) * num_items_per_page
-        end_index = min(start_index + num_items_per_page, len(dataset))
+        end_index = min(start_index + num_items_per_page, len(config["dataset"]))
 
-        return dataset, start_index, end_index
-    
-    return None, 0, 0 
+        # Update the config dictionary with actual values
+        config["start_index"] = start_index
+        config["end_index"] = end_index
+
+    return config  # Return the config dictionary
 
 def process_dataset():
 
-    dataset, start_index, end_index = config_panel() 
-
+    config = config_panel()  # Call config_panel and store the returned dictionary
+    dataset = config["dataset"]
+    
     if dataset is None: 
         st.error("Dataset could not be loaded. Please try again.")
         return
+
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i+1)

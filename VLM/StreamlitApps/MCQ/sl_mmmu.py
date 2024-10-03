@@ -36,6 +36,14 @@ def load_data(subset, split):
 def config_panel():
     st.sidebar.title("MMMU")
 
+    # Initialize the dictionary to hold the return values
+    config = {
+        "dataset": None,
+        "subject": None,  # Initialize subject
+        "start_index": 0,
+        "end_index": 0
+    }
+
     # Subset selection
     subset = st.sidebar.selectbox("Select Subset", ["Accounting", "Agriculture", "Architecture_and_Engineering", "Art", "Art_Theory", "Basic_Medical_Science", "Biology", "Chemistry", "Clinical_Medicine", "Computer_Science", "Design", "Diagnostics_and_Laboratory_Medicine", "Economics", "Electronics", "Energy_and_Power", "Finance", "Geography", "History", "Literature", "Manage", "Marketing", "Materials", "Math", "Mechanical_Engineering", "Music", "Pharmacy", "Physics", "Psychology", "Public_Health", "Sociology"])
 
@@ -43,22 +51,26 @@ def config_panel():
     split = st.sidebar.selectbox("Select Split", ["test", "validation", "dev"])
 
     # Load dataset
-    dataset = load_data(subset, split)
+    config["dataset"] = load_data(subset, split)
 
-    if dataset:
+    if config["dataset"]:
+        config["subject"] = subset  # Set the subject based on the selected subset
         num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
     
-        total_items = len(dataset)
+        total_items = len(config["dataset"])
         total_pages = (total_items + num_items_per_page - 1) // num_items_per_page
 
         selected_page = st.sidebar.selectbox("Select Page Number", options=list(range(1, total_pages + 1)))
 
+        # Calculate start and end index
         start_index = (selected_page - 1) * num_items_per_page
-        end_index = min(start_index + num_items_per_page, len(dataset))
+        end_index = min(start_index + num_items_per_page, total_items)
 
-        return dataset, subset, start_index, end_index
-    
-    return None, None, 0, 0
+        # Update the config dictionary with actual values
+        config["start_index"] = start_index
+        config["end_index"] = end_index
+
+    return config  # Return the config dictionary
 
 @st.cache_resource
 def load_vlm_model():
@@ -148,11 +160,16 @@ def process_question(row, subject, index):
 
 def process_dataset():
 
-    dataset, subject, start_index, end_index = config_panel() 
+    config = config_panel()  # Call config_panel and store the returned dictionary
+    dataset = config["dataset"]
     
     if dataset is None:
         st.error("Dataset could not be loaded. Please try again.")
         return
+    
+    subject = config["subject"]  # Assuming 'subject' is also included in the config
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], subject, i+1)  

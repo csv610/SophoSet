@@ -3,8 +3,8 @@ from langchain_ollama.llms import OllamaLLM
 import time
 
 class LLMChat:
-    def __init__(self, model_name, temperature = 0.5):
-        self.model = OllamaLLM(model=model_name, temperature = temperature)
+    def __init__(self, model_name, temperature=0.5):
+        self.model = OllamaLLM(model=model_name, temperature=temperature)
         self.mcq_prompt_template = """
             Question: {question}
             Choices:  {choices}
@@ -88,7 +88,6 @@ def load_llm_model(model_name: str):
     return LLMChat(model_name)
 
 def ask_llm(llm, question, options, rowid):
-
     if st.button(f"LLM Answer:{rowid}"):
         with st.spinner("Processing ..."):
             try:
@@ -103,14 +102,14 @@ def ask_llm(llm, question, options, rowid):
     if st.button(f"Ask Question: {rowid}"):
         user_question = st.text_area(f"Edit Question {rowid}", height=100)
         if user_question is not None:
-              with st.spinner("Processing ..."):
-                   prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
-                   try:
-                       response = llm.get_answer(prompt)
-                       st.write(f"Answer: {response['answer']}")
-                       st.write(f"Number of Input words: {response['num_input_words']}")
-                       st.write(f"Number of output  words: {response['num_output_words']}")
-                       st.write(f"Time: {response['response_time']}")
-                   except Exception as e:
-                       st.error(f"An error occurred: {e}")
+            with st.spinner("Processing ..."):
+                prompt = "Based on the Context of " + question + " Answer the User Question: " + user_question
+                try:
+                    response = llm.get_answer(prompt)
+                    st.write(f"Answer: {response['answer']}")
+                    st.write(f"Number of Input words: {response['num_input_words']}")
+                    st.write(f"Number of output  words: {response['num_output_words']}")
+                    st.write(f"Time: {response['response_time']}")
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
 

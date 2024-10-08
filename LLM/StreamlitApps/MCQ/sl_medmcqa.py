@@ -33,18 +33,18 @@ def process_question(row, index):
     st.write(f"(D): {opd}")
 
     # Displaying answer with a button
-    if st.button(f"CorrectAnswer:{index}"):
-        st.write(f"Answer: {cop}")
+    if st.button(f"Correct Answer #{index}"):
+        st.write(f"Answer: {chr(65 + cop)}")
 
         # Displaying explanation with a button
     if st.button(f"Explanation:{index}"):
-        st.write(f"Explanation: {exp}")
+        st.write(f"Explanation #{exp}")
 
     st.divider()
 
 # Streamlit app
 def process_dataset():
-    st.sidebartitle("Medmcqa")
+    st.sidebar.title("Medmcqa")
 
     # Split selection
     split = st.sidebar.selectbox("Select Split", ["train", "validation", "test"])

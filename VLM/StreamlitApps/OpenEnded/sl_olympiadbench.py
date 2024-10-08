@@ -80,11 +80,16 @@ def process_question(row, index):
 def config_panel():
     st.sidebar.title("OlympiadBench")
 
+    # Initialize the dictionary to hold the return values
     config = {
         "dataset": None,
         "start_index": 0,
-        "end_index": 0
+        "end_index": 0,
+        "vlm_model": "llava"
     }
+
+    # Select the VLM model
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", ["llama3.2", "llama3.1"])  # Model select
 
     split = st.sidebar.selectbox("Select Split", ["test_en", "test_cn"])
 
@@ -103,6 +108,8 @@ def config_panel():
         end_index = min(start_index + num_items_per_page, total_items)
         config["start_index"] = start_index  # Update start_index in config
         config["end_index"] = end_index      # Update end_index in config
+
+    ion
 
     return config 
 

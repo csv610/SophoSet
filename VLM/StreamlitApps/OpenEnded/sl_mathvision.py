@@ -33,11 +33,17 @@ def config_panel():
     # Select subset
     split = st.sidebar.selectbox("Select Dataset Subset", options=['test', 'testmini'])
 
-    config = {  # Changed from param to config
+    # Initialize return dictionary
+    config = {
         "dataset": None,
         "start_index": 0,
-        "end_index": 0
+        "end_index": 0,
+        "vlm_model": "llava"
     }
+
+    # List of available VLM models
+    vlm_model_options = ["llama3.2", "llama3.1"]  # Updated VLM models
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", options=vlm_model_options)  # VLM model selection box
 
     # Load dataset
     config["dataset"] = load_data(split)  # Store the loaded dataset in the config dictionary
@@ -133,11 +139,11 @@ def process_question(row, index):
         "image": image,
         "index": index
     }
+
     ask_vlm(vlm_params)  # Pass vlm_params as a single argument
 
     st.divider()
   
-# Streamlit app
 def process_dataset():
     config = config_panel()
 

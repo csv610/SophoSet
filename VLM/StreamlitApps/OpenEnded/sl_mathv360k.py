@@ -8,7 +8,6 @@ from vlm_chat import LlavaModel
 
 st.set_page_config(layout="wide")
 
-# Load the dataset
 @st.cache_data()
 def load_data(split):
     model_name = "Zhiqiang007/MathV360K"
@@ -20,6 +19,50 @@ def load_data(split):
     except Exception as e:
         st.error(f"Error loading dataset: {str(e)}")
         return None
+
+def config_panel():
+    st.sidebar.title("MathV360K")
+
+    # Initialize return dictionary
+    config = {
+        "dataset": None,
+        "start_index": 0,
+        "end_index": 0,
+        "image_folder": None,
+        "vlm_model": "llava" 
+    }
+
+    # List of available VLM models
+    vlm_model_options = ["llama3.2", "llama3.1"]
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", options=vlm_model_options)  # VLM model selection box
+
+    # Load dataset
+    split = 'train'
+    config["dataset"] = load_data(split)
+    
+    if config["dataset"] is None:  # Check if dataset is None
+        st.error("Dataset could not be loaded. Please try again.")
+        return config  # Return the initialized config
+
+    # Ask for image folder
+    config["image_folder"] = st.sidebar.text_input("Enter Image Folder Path", "../../images/mathv360k")
+    
+    # Select number of questions per page
+    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
+    
+    # Calculate total pages
+    total_items = len(config["dataset"])
+    total_pages = (total_items // num_items_per_page) + 1
+
+    # Page selection box
+    page_options = list(range(1, total_pages + 1))
+    selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
+
+    # Calculate start and end index for pagination
+    config["start_index"] = (selected_page - 1) * num_items_per_page
+    config["end_index"] = min(config["start_index"] + num_items_per_page, total_items)
+
+    return config
 
 # Function to display conversation with hint, question, and choices on separate lines
 def display_conversation(conversation_list):
@@ -130,44 +173,8 @@ def process_question(row, index, image_folder):
     
     ask_vlm(vlm_params) 
 
-def config_panel():
-    st.sidebar.title("MathV360K")
+    st.divider()
 
-    # Initialize return dictionary
-    config = {
-        "dataset": None,
-        "start_index": 0,
-        "end_index": 0,
-        "image_folder": None
-    }
-
-    # Load dataset
-    split = 'train'
-    config["dataset"] = load_data(split)
-    
-    if config["dataset"] is None:  # Check if dataset is None
-        st.error("Dataset could not be loaded. Please try again.")
-        return config  # Return the initialized config
-
-    # Ask for image folder
-    config["image_folder"] = st.sidebar.text_input("Enter Image Folder Path", "../../images/mathv360k")
-    
-    # Select number of questions per page
-    num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
-    
-    # Calculate total pages
-    total_items = len(config["dataset"])
-    total_pages = (total_items // num_items_per_page) + 1
-
-    # Page selection box
-    page_options = list(range(1, total_pages + 1))
-    selected_page = st.sidebar.selectbox("Select Page Number", options=page_options)
-
-    # Calculate start and end index for pagination
-    config["start_index"] = (selected_page - 1) * num_items_per_page
-    config["end_index"] = min(config["start_index"] + num_items_per_page, total_items)
-
-    return config
 
 def process_dataset():
     config = config_panel()

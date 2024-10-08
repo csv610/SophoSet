@@ -64,7 +64,8 @@ def config_panel() -> dict:
     config = {
         "dataset": None,
         "start_index": 0,
-        "end_index": 0
+        "end_index": 0,
+        "vlm_model": "llava"
     }
 
     subject = st.sidebar.selectbox("Select Subject", ["Astronomy", "Biology", "CS", "Chemistry", "Geography", "Math", "Physics"])
@@ -89,6 +90,9 @@ def config_panel() -> dict:
     config["dataset"] = dataset  # Update the config with the loaded dataset
     config["start_index"] = start_index
     config["end_index"] = end_index
+
+    # Select the VLM model
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", ["llama3.2", "llama3.1"])  # Model selection
 
     return config
 

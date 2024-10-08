@@ -89,7 +89,9 @@ def process_question(row: dict, index: int):
         "image": image,
         "index": index
     }
-    ask_vlm(params)  # Pass the dictionary to the function
+
+    ask_vlm(params) 
+
     st.divider()
 
 def config_panel():
@@ -99,8 +101,13 @@ def config_panel():
     config = {
         "dataset": None,
         "start_index": 0,
-        "end_index": 0
+        "end_index": 0,
+        "vlm_model": "llava"
     }
+
+    # Select the VLM model
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", ["llama3.2", "llama3.1"])  # Model selection
+
 
     # Select the dataset split
     opt_split = st.sidebar.selectbox("Select dataset split", ["test", "testmini"])
@@ -144,6 +151,7 @@ def config_panel():
     if opt_skill != "all":
         config["dataset"] = config["dataset"].filter(lambda x: opt_skill.lower() in [skill.lower() for skill in x['metadata']['skills']])
 
+    
     if config["dataset"] is not None:  # Check if the dataset is valid
         num_items_per_page = st.sidebar.slider("Select Number of Items per Page", min_value=1, max_value=10, value=5)
         
@@ -163,17 +171,19 @@ def config_panel():
         config["start_index"] = start_index
         config["end_index"] = end_index
 
-    return config  # Return the config dictionary
+    return config
 
 def process_dataset():
-    config = config_panel()  # Call config_panel and store the returned dictionary
+    config = config_panel()  
+
     dataset = config["dataset"]
-    start_index = config["start_index"]
-    end_index = config["end_index"]
-    
+
     if dataset is None:  # Check if dataset is None
         st.error("Dataset could not be loaded. Please try again.")
         return  # Exit the function if dataset is not loaded
+
+    start_index = config["start_index"]
+    end_index = config["end_index"]
 
     for i in range(start_index, end_index):
         process_question(dataset[i], i + 1)

@@ -57,7 +57,8 @@ def config_panel():
     config = {
         "dataset": None,
         "start_index": 0,
-        "end_index": 0
+        "end_index": 0,
+        "vlm_model": "llava"
     }
 
     st.sidebar.title("TheoremQA")
@@ -79,6 +80,10 @@ def config_panel():
     config["dataset"] = dataset 
     config["start_index"] = start_index
     config["end_index"] = end_index
+
+    # Add model selection in the sidebar
+    vlm_model_options = ["llama3.2", "llama3.1"]
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", options=vlm_model_options)
 
     return config  
 

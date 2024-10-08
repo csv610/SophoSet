@@ -83,7 +83,8 @@ def config_panel():
         "dataset": None,
         "start_index": 0,
         "end_index": 0,
-        "img_dir": ""  # Initialize img_dir
+        "img_dir": "",
+        "vlm_model": "llava" 
     }
 
     st.sidebar.title("SLAKE")
@@ -115,6 +116,10 @@ def config_panel():
     config["dataset"] = dataset  # Update the config with the loaded dataset
     config["start_index"] = start_index
     config["end_index"] = end_index
+
+    # Add model selection in the sidebar
+    vlm_model_options = ["llama3.2", "llama3.1"]
+    config["vlm_model"] = st.sidebar.selectbox("Select VLM Model", options=vlm_model_options)
 
     return config  # Return the updated config dictionary
 
